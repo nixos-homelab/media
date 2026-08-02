@@ -66,24 +66,6 @@ in
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
     services.k3s.images = [ image ];
     kubetree.resources.plex = {
-      netpol = {
-        apiVersion = "cilium.io/v2";
-        kind = "CiliumNetworkPolicy";
-        metadata = {
-          namespace = "plex";
-          name = "plex-from-local-lan";
-          labels."app.kubernetes.io/name" = "plex";
-        };
-        spec.endpointSelector.matchLabels."app.kubernetes.io/name" = "plex";
-        spec.ingress = [
-          {
-            fromCIDRSet = [
-              { cidrGroupRef = "local-lan"; }
-            ];
-            toPortsFlattened = [ 32400 ];
-          }
-        ];
-      };
       certificate = {
         apiVersion = "cert-manager.io/v1";
         kind = "Certificate";
@@ -143,6 +125,7 @@ in
         kind = "ServiceMacro";
         metadata.name = "plex";
         spec = {
+          allowIngress = [ "local-lan" ];
           allowEgress = [ "internet" ];
           dataPath = "/Library";
           servicePodSpec = {
