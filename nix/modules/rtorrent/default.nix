@@ -17,6 +17,7 @@ in
       type = lib.types.attrsOf lib.types.anything;
     };
   };
+  imports = [ inputs.homelab-networking.nixosModules.privacy-vpn ];
   config =
     let
       ccfg = config.homelab.cluster;

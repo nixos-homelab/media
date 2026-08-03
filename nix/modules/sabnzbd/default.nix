@@ -41,7 +41,11 @@ in
       type = lib.types.attrsOf lib.types.anything;
     };
   };
-  imports = [ inputs.setup-secrets.nixosModules.default ] ++ self.lib.importsApply [ ./homepage.nix ];
+  imports = [
+    inputs.setup-secrets.nixosModules.default
+    inputs.homelab-networking.nixosModules.privacy-vpn
+  ]
+  ++ self.lib.importsApply [ ./homepage.nix ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.SABNZBD_API_KEY = {
       description = "SABnzbd API Key";

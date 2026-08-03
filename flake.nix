@@ -25,6 +25,15 @@
       inputs.kubetree.follows = "kubetree";
       inputs.kube-generators.follows = "kube-generators";
     };
+    homelab-networking = {
+      url = "github:andsens/nixos-homelab-networking";
+      inputs.systems.follows = "systems";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+      inputs.setup-secrets.follows = "setup-secrets";
+      inputs.kubetree.follows = "kubetree";
+      inputs.kube-generators.follows = "kube-generators";
+    };
   };
   outputs =
     {
