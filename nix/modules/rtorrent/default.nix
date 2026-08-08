@@ -289,7 +289,7 @@ in
           apiVersion = "cluster.local";
           kind = "ServiceNetpols";
           metadata.name = "rtorrent";
-          spec.toPortsFlattened = [ 5000 ];
+          spec.ports = [ 5000 ];
         };
       };
 
