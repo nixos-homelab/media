@@ -8,8 +8,8 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.sabnzbd;
-  hllib = inputs.shared.lib;
-  container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  hllib = inputs.homelab-shared.lib;
+  container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sabnzbd";
     copyToRoot = [
@@ -23,12 +23,13 @@ let
       "CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle.crt"
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
     ];
-    runAsRoot = ''
-      #!${pkgs.runtimeShell}
-      ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} sabnzbd
-      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
-    '';
+    # TODO: Is this necessary?
+    # runAsRoot = ''
+    #   #!${pkgs.runtimeShell}
+    #   ${pkgs.dockerTools.shadowSetup}
+    #   groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} sabnzbd
+    #   useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
+    # '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.sabnzbd) ];
   };
 in

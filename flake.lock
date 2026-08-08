@@ -56,7 +56,7 @@
     },
     "flake-utils_3": {
       "inputs": {
-        "systems": "systems_4"
+        "systems": "systems_3"
       },
       "locked": {
         "lastModified": 1731533236,
@@ -76,7 +76,7 @@
       "inputs": {
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ]
@@ -122,7 +122,7 @@
     "haumea_3": {
       "inputs": {
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ]
@@ -142,7 +142,45 @@
         "type": "github"
       }
     },
-    "homelab": {
+    "homelab-networking": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "homelab-shared": "homelab-shared",
+        "kube-generators": [
+          "kube-generators"
+        ],
+        "kubetree": [
+          "kubetree"
+        ],
+        "nixhelm": "nixhelm_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "nixpkgs-mongodb-pin": "nixpkgs-mongodb-pin",
+        "setup-secrets": [
+          "setup-secrets"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786185097,
+        "narHash": "sha256-fi2HNL+mt0XtYzqZ/u951L8tlimaBN2KY1VWFzB+oX0=",
+        "owner": "nixos-homelab",
+        "repo": "networking",
+        "rev": "bb6ca46018c9880a458c7ff6b72ad20dd5a70557",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos-homelab",
+        "repo": "networking",
+        "type": "github"
+      }
+    },
+    "homelab-shared": {
       "inputs": {
         "flake-parts": [
           "homelab-networking",
@@ -172,36 +210,35 @@
         ]
       },
       "locked": {
-        "lastModified": 1785771455,
-        "narHash": "sha256-lcwB3UUPcrK5rTxHdx55maCuiuR+gX80+eUdQklOklc=",
-        "owner": "andsens",
-        "repo": "nixos-homelab",
-        "rev": "0d40f890056e4a04c4191dc2debbae6a656f6d1e",
+        "lastModified": 1786184356,
+        "narHash": "sha256-ZSRH5mninP6LXXiKBQnFSWQnx9ut920uiqzUZzD6qHE=",
+        "owner": "nixos-homelab",
+        "repo": "shared",
+        "rev": "82c56ac41ce48668feb465f73629a09c754fbd8c",
         "type": "github"
       },
       "original": {
-        "owner": "andsens",
-        "repo": "nixos-homelab",
+        "owner": "nixos-homelab",
+        "repo": "shared",
         "type": "github"
       }
     },
-    "homelab-networking": {
+    "homelab-shared_2": {
       "inputs": {
         "flake-parts": [
           "flake-parts"
         ],
-        "homelab": "homelab",
+        "k8sss": "k8sss_2",
         "kube-generators": [
           "kube-generators"
         ],
         "kubetree": [
           "kubetree"
         ],
-        "nixhelm": "nixhelm_2",
+        "nixhelm": "nixhelm_3",
         "nixpkgs": [
           "nixpkgs"
         ],
-        "nixpkgs-mongodb-pin": "nixpkgs-mongodb-pin",
         "setup-secrets": [
           "setup-secrets"
         ],
@@ -210,16 +247,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1786173699,
-        "narHash": "sha256-9rx/tCb487IHEiK1oIEsI7KNNMNX3AaRYV5HGptYd7o=",
+        "lastModified": 1786184356,
+        "narHash": "sha256-ZSRH5mninP6LXXiKBQnFSWQnx9ut920uiqzUZzD6qHE=",
         "owner": "nixos-homelab",
-        "repo": "networking",
-        "rev": "d28b15b21178e98c92207c9f25fa858a5e0331be",
+        "repo": "shared",
+        "rev": "82c56ac41ce48668feb465f73629a09c754fbd8c",
         "type": "github"
       },
       "original": {
         "owner": "nixos-homelab",
-        "repo": "networking",
+        "repo": "shared",
         "type": "github"
       }
     },
@@ -227,23 +264,23 @@
       "inputs": {
         "flake-parts": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "flake-parts"
         ],
         "kube-generators": "kube-generators",
         "kubetree": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "kubetree"
         ],
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixpkgs"
         ],
         "systems": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "systems"
         ]
       },
@@ -264,20 +301,20 @@
     "k8sss_2": {
       "inputs": {
         "flake-parts": [
-          "shared",
+          "homelab-shared",
           "flake-parts"
         ],
-        "kube-generators": "kube-generators_3",
+        "kube-generators": "kube-generators_2",
         "kubetree": [
-          "shared",
+          "homelab-shared",
           "kubetree"
         ],
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixpkgs"
         ],
         "systems": [
-          "shared",
+          "homelab-shared",
           "systems"
         ]
       },
@@ -348,7 +385,7 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "systems": "systems_3"
+        "systems": "systems_4"
       },
       "locked": {
         "lastModified": 1781446270,
@@ -416,7 +453,7 @@
         "nix-kube-generators": "nix-kube-generators",
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixpkgs"
         ],
         "pyproject-build-systems": "pyproject-build-systems",
@@ -470,7 +507,7 @@
         "haumea": "haumea_3",
         "nix-kube-generators": "nix-kube-generators_3",
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixpkgs"
         ],
         "pyproject-build-systems": "pyproject-build-systems_3",
@@ -542,19 +579,19 @@
       "inputs": {
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ],
         "pyproject-nix": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "pyproject-nix"
         ],
         "uv2nix": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "uv2nix"
         ]
@@ -608,17 +645,17 @@
     "pyproject-build-systems_3": {
       "inputs": {
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "pyproject-nix"
         ],
         "uv2nix": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "uv2nix"
         ]
@@ -641,7 +678,7 @@
       "inputs": {
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ]
@@ -685,7 +722,7 @@
     "pyproject-nix_3": {
       "inputs": {
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ]
@@ -708,11 +745,11 @@
       "inputs": {
         "flake-parts": "flake-parts",
         "homelab-networking": "homelab-networking",
-        "kube-generators": "kube-generators_2",
+        "homelab-shared": "homelab-shared_2",
+        "kube-generators": "kube-generators_3",
         "kubetree": "kubetree",
         "nixpkgs": "nixpkgs",
         "setup-secrets": "setup-secrets",
-        "shared": "shared",
         "systems": "systems_5"
       }
     },
@@ -739,43 +776,6 @@
       "original": {
         "owner": "andsens",
         "repo": "nixos-setup-secrets",
-        "type": "github"
-      }
-    },
-    "shared": {
-      "inputs": {
-        "flake-parts": [
-          "flake-parts"
-        ],
-        "k8sss": "k8sss_2",
-        "kube-generators": [
-          "kube-generators"
-        ],
-        "kubetree": [
-          "kubetree"
-        ],
-        "nixhelm": "nixhelm_3",
-        "nixpkgs": [
-          "nixpkgs"
-        ],
-        "setup-secrets": [
-          "setup-secrets"
-        ],
-        "systems": [
-          "systems"
-        ]
-      },
-      "locked": {
-        "lastModified": 1786177994,
-        "narHash": "sha256-wgvg3bXSvrSqmL+43H++t9aWcvACoJEBB3jL3Vq0VlI=",
-        "owner": "nixos-homelab",
-        "repo": "shared",
-        "rev": "699e629c323573bf58e190b1d03910567638ee2b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos-homelab",
-        "repo": "shared",
         "type": "github"
       }
     },
@@ -819,8 +819,9 @@
         "type": "github"
       },
       "original": {
-        "id": "systems",
-        "type": "indirect"
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
       }
     },
     "systems_4": {
@@ -833,9 +834,8 @@
         "type": "github"
       },
       "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
+        "id": "systems",
+        "type": "indirect"
       }
     },
     "systems_5": {
@@ -857,13 +857,13 @@
       "inputs": {
         "nixpkgs": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ],
         "pyproject-nix": [
           "homelab-networking",
-          "homelab",
+          "homelab-shared",
           "nixhelm",
           "pyproject-nix"
         ]
@@ -912,12 +912,12 @@
     "uv2nix_3": {
       "inputs": {
         "nixpkgs": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "nixpkgs"
         ],
         "pyproject-nix": [
-          "shared",
+          "homelab-shared",
           "nixhelm",
           "pyproject-nix"
         ]

@@ -16,7 +16,7 @@ in
       default = config.homelab.services.flood.enable && config.homelab.services.homepage.enable;
     };
   };
-  imports = [ inputs.shared.nixosModules.homepage ];
+  imports = [ inputs.homelab-shared.nixosModules.homepage ];
   config = lib.mkIf cfg.enable {
     homelab.services.homepage = {
       services.Download.Flood = {

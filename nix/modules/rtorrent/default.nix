@@ -6,7 +6,7 @@
   ...
 }:
 let
-  hllib = inputs.shared.lib;
+  hllib = inputs.homelab-shared.lib;
 in
 {
   options.homelab.services.rtorrent = {
@@ -21,7 +21,7 @@ in
   config =
     let
       ccfg = config.homelab.cluster;
-      container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+      container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
       cfg = config.homelab.services.rtorrent;
       kubelib = inputs.kube-generators.lib { inherit pkgs; };
       bittorrentPort = 6881;

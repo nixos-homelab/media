@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.homepage.integrations.sabnzbd;
-  hllib = inputs.shared.lib;
+  hllib = inputs.homelab-shared.lib;
 in
 {
   options.homelab.services.homepage.integrations.sabnzbd = {
@@ -20,7 +20,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.shared.nixosModules.homepage
+    inputs.homelab-shared.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
