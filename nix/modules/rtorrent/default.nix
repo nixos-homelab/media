@@ -182,7 +182,7 @@ in
             volumesByName = {
               data.persistentVolumeClaim.claimName = "rtorrent";
               downloads = cfg.downloadsVolume;
-              config.configMap.name = "config";
+              config.configMap.name = "rtorrent";
               log.emptyDir = { };
               run.emptyDir = { };
             };
@@ -263,7 +263,7 @@ in
         config = {
           apiVersion = "v1";
           kind = "ConfigMap";
-          metadata.name = "config";
+          metadata.name = "rtorrent";
           metadata.namespace = "rtorrent";
           data."rtorrent.rc" = builtins.readFile ./rtorrent.rc;
         };
