@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (PLEX_API_KEY)";
         requires = [ "PLEX_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key PLEX_API_KEY "$PLEX_API_KEY"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key PLEX_API_KEY "''${PLEX_API_KEY:?}"'';
       }
     ];
     homelab.services.homepage = {

@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (SONARR_API_KEY)";
         requires = [ "SONARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sonarr-api-key SONARR_API_KEY "$SONARR_API_KEY"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sonarr-api-key SONARR_API_KEY "''${SONARR_API_KEY:?}"'';
       }
     ];
     homelab.services.homepage = {

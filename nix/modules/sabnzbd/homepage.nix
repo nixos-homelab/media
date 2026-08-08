@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (SABNZBD_API_KEY)";
         requires = [ "SABNZBD_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key SABNZBD_API_KEY "$SABNZBD_API_KEY"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key SABNZBD_API_KEY "''${SABNZBD_API_KEY:?}"'';
       }
     ];
     homelab.services.homepage = {

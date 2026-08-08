@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (PROWLARR_API_KEY)";
         requires = [ "PROWLARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage prowlarr-api-key PROWLARR_API_KEY "$PROWLARR_API_KEY"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage prowlarr-api-key PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}"'';
       }
     ];
     homelab.services.homepage = {

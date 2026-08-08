@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (RADARR_API_KEY)";
         requires = [ "RADARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key RADARR_API_KEY "$RADARR_API_KEY"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key RADARR_API_KEY "''${RADARR_API_KEY:?}"'';
       }
     ];
     homelab.services.homepage = {
