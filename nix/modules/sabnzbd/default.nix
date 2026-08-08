@@ -56,94 +56,62 @@ in
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.sabnzbd = {
-      data = {
-        apiVersion = "v1";
-        kind = "PersistentVolumeClaim";
-        metadata.namespace = "sabnzbd";
-        metadata.name = "sabnzbd";
-        spec = {
-          accessModes = [ "ReadWriteOnce" ];
-          resources.requests.storage = "1Gi";
-          volumeMode = "Filesystem";
+    kubetree.resources.sabnzbd.content = {
+      apiVersion = "cluster.local";
+      kind = "ServiceMacro";
+      metadata.name = "sabnzbd";
+      spec = {
+        allowEgress = [ "internet" ];
+        template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
+          "cluster.local/egress-gateway" = "privacy-vpn";
         };
-      };
-      deployment = {
-        apiVersion = "cluster.local";
-        kind = "ServiceDeployment";
-        metadata.name = "sabnzbd";
-        spec = {
-          allowIngress = [ "gateway" ];
-          allowEgress = [ "internet" ];
-          template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
-            "cluster.local/egress-gateway" = "privacy-vpn";
+        ingressPort = 8080;
+        dataPath = "/data";
+        servicePodSpec = {
+          name = "sabnzbd";
+          initContainersByName.setup-config = {
+            image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
+            imagePullPolicy = "Never";
+            args = [
+              ''
+                [[ -f "/data/sabnzbd.ini" ]] || cat >"/data/sabnzbd.ini" <<'EOF'
+                [misc]
+                host = 0.0.0.0
+                port = 8080
+                host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
+                download_dir = /usenet/incomplete
+                complete_dir = /usenet/complete
+                schedlines = "1 0 21 7 create_backup ",
+                backup_dir = "/data/backups"
+                EOF
+              ''
+            ];
+            securityContext.readOnlyRootFilesystem = true;
+            volumeMountsByPath."/data" = "data";
           };
-          template.servicePodSpec = {
-            name = "sabnzbd";
-            initContainersByName.setup-config = {
-              image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
-              imagePullPolicy = "Never";
-              args = [
-                ''
-                  [[ -f "/data/sabnzbd.ini" ]] || cat >"/data/sabnzbd.ini" <<'EOF'
-                  [misc]
-                  host = 0.0.0.0
-                  port = 8080
-                  host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
-                  download_dir = /usenet/incomplete
-                  complete_dir = /usenet/complete
-                  schedlines = "1 0 21 7 create_backup ",
-                  backup_dir = "/data/backups"
-                  EOF
-                ''
-              ];
-              securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."/data" = "data";
-            };
-            mainContainer = {
-              image = "${image.buildArgs.name}:${image.imageTag}";
-              imagePullPolicy = "Never";
-              args = [
-                "--disable-file-log"
-                "--console"
-                "--config-file"
-                "/data/sabnzbd.ini"
-              ];
-              workingDir = "/data";
-              portsByName.web = 8080;
-              livenessProbe.httpGet.port = "web";
-              readinessProbe.httpGet.port = "web";
-              volumeMountsByPath = {
-                "/data" = "data";
-                "/usenet" = "downloads";
-                "/tmp" = "tmp";
-              };
-            };
-            volumesByName = {
-              data.persistentVolumeClaim.claimName = "sabnzbd";
-              downloads = cfg.downloadsVolume;
-              tmp.emptyDir = { };
+          mainContainer = {
+            image = "${image.buildArgs.name}:${image.imageTag}";
+            imagePullPolicy = "Never";
+            args = [
+              "--disable-file-log"
+              "--console"
+              "--config-file"
+              "/data/sabnzbd.ini"
+            ];
+            workingDir = "/data";
+            portsByName.web = 8080;
+            livenessProbe.httpGet.port = "web";
+            readinessProbe.httpGet.port = "web";
+            volumeMountsByPath = {
+              "/usenet" = "downloads";
+              "/tmp" = "tmp";
             };
           };
+          volumesByName = {
+            downloads = cfg.downloadsVolume;
+            tmp.emptyDir = { };
+          };
         };
-      };
-      service = {
-        apiVersion = "cluster.local";
-        kind = "ServiceService";
-        metadata.name = "sabnzbd";
-        spec.portsByName.web = 8080;
-      };
-      gateway = {
-        apiVersion = "cluster.local";
-        kind = "ServiceGateway";
-        metadata.name = "sabnzbd";
-        spec.port = 8080;
-      };
-      netpols = {
-        apiVersion = "cluster.local";
-        kind = "ServiceNetpols";
-        metadata.name = "sabnzbd";
-        spec.toPortsFlattened = [ 8080 ];
       };
     };
   };
