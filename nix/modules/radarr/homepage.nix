@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.homepage.integrations.radarr;
-  hllib = inputs.homelab.lib;
+  hllib = inputs.shared.lib;
 in
 {
   options.homelab.services.homepage.integrations.radarr = {
@@ -20,7 +20,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.homelab.nixosModules.homepage
+    inputs.shared.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [

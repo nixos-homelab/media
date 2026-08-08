@@ -8,8 +8,8 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.sabnzbd;
-  hllib = inputs.homelab.lib;
-  container-utils = inputs.homelab.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  hllib = inputs.shared.lib;
+  container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sabnzbd";
     copyToRoot = [

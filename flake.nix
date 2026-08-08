@@ -16,8 +16,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    homelab = {
-      url = "github:andsens/nixos-homelab";
+    shared = {
+      url = "github:nixos-homelab/shared";
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
@@ -26,7 +26,7 @@
       inputs.kube-generators.follows = "kube-generators";
     };
     homelab-networking = {
-      url = "github:andsens/nixos-homelab-networking";
+      url = "github:nixos-homelab/networking";
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";

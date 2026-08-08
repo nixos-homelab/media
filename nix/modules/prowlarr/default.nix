@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.prowlarr;
-  hllib = inputs.homelab.lib;
+  hllib = inputs.shared.lib;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
     copyToRoot =

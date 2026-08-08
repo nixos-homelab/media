@@ -7,9 +7,9 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  hllib = inputs.homelab.lib;
+  hllib = inputs.shared.lib;
   cfg = config.homelab.services.plex;
-  container-utils = inputs.homelab.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
     copyToRoot =
@@ -58,7 +58,7 @@ in
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PLEX_API_KEY = {
       description = "Plex API Key";
-      cmd = inputs.homelab.lib.setup-secrets.mkScript pkgs ''
+      cmd = inputs.shared.lib.setup-secrets.mkScript pkgs ''
         kubectl exec -n plex -c plex deploy/plex -- \
           xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"
       '';
