@@ -7,15 +7,15 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.homepage.integrations.plex;
+  cfg = config.homelab.workloads.homepage.integrations.plex;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.homepage.integrations.plex = {
+  options.homelab.workloads.homepage.integrations.plex = {
     enable = lib.mkOption {
       description = "integration of plex with homepage";
       type = lib.types.bool;
-      default = config.homelab.services.plex.enable && config.homelab.services.homepage.enable;
+      default = config.homelab.workloads.plex.enable && config.homelab.workloads.homepage.enable;
     };
   };
   imports = [
@@ -30,7 +30,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key PLEX_API_KEY "''${PLEX_API_KEY:?}"'';
       }
     ];
-    homelab.services.homepage = {
+    homelab.workloads.homepage = {
       services.Media.Plex = {
         icon = "plex.png";
         description = "Media center";

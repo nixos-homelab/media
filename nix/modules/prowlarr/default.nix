@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.prowlarr;
+  cfg = config.homelab.workloads.prowlarr;
   hllib = inputs.homelab-shared.lib;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
@@ -26,14 +26,14 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} prowlarr
-      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g prowlarr -d /data prowlarr
+      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} prowlarr
+      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g prowlarr -d /data prowlarr
     '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.prowlarr) ];
   };
 in
 {
-  options.homelab.services.prowlarr = {
+  options.homelab.workloads.prowlarr = {
     enable = lib.mkEnableOption "prowlarr";
     debug = lib.mkEnableOption "debug mode";
   };
@@ -47,7 +47,7 @@ in
     services.k3s.images = [ image ];
     kubetree.resources.prowlarr.content = {
       apiVersion = "cluster.local";
-      kind = "ServiceMacro";
+      kind = "WorkloadMacro";
       metadata.name = "prowlarr";
       spec = {
         allowEgress = [
@@ -59,7 +59,7 @@ in
         ];
         ingressPort = 9696;
         dataPath = "/data";
-        servicePodSpec = {
+        podSpecMacro = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";

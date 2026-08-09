@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.sabnzbd;
+  cfg = config.homelab.workloads.sabnzbd;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
@@ -27,14 +27,14 @@ let
     # runAsRoot = ''
     #   #!${pkgs.runtimeShell}
     #   ${pkgs.dockerTools.shadowSetup}
-    #   groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} sabnzbd
-    #   useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
+    #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} sabnzbd
+    #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
     # '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.sabnzbd) ];
   };
 in
 {
-  options.homelab.services.sabnzbd = {
+  options.homelab.workloads.sabnzbd = {
     enable = lib.mkEnableOption "sabnzbd";
     debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
@@ -59,7 +59,7 @@ in
     services.k3s.images = [ image ];
     kubetree.resources.sabnzbd.content = {
       apiVersion = "cluster.local";
-      kind = "ServiceMacro";
+      kind = "WorkloadMacro";
       metadata.name = "sabnzbd";
       spec = {
         allowEgress = [ "internet" ];
@@ -68,7 +68,7 @@ in
         };
         ingressPort = 8080;
         dataPath = "/data";
-        servicePodSpec = {
+        podSpecMacro = {
           name = "sabnzbd";
           initContainersByName.setup-config = {
             image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";

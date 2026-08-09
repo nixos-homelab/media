@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.radarr;
+  cfg = config.homelab.workloads.radarr;
   hllib = inputs.homelab-shared.lib;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/radarr";
@@ -26,14 +26,14 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} radarr
-      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g radarr -d /data radarr
+      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} radarr
+      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g radarr -d /data radarr
     '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.radarr) ];
   };
 in
 {
-  options.homelab.services.radarr = {
+  options.homelab.workloads.radarr = {
     enable = lib.mkEnableOption "radarr";
     debug = lib.mkEnableOption "debug mode";
     volumes = lib.mkOption {
@@ -52,7 +52,7 @@ in
     services.k3s.images = [ image ];
     kubetree.resources.radarr.content = {
       apiVersion = "cluster.local";
-      kind = "ServiceMacro";
+      kind = "WorkloadMacro";
       metadata.name = "radarr";
       spec = {
         allowEgress = [
@@ -64,7 +64,7 @@ in
         ];
         ingressPort = 7878;
         dataPath = "/data";
-        servicePodSpec = {
+        podSpecMacro = {
           mainContainer = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
@@ -89,10 +89,10 @@ in
               "/tmp" = "tmp";
             }
             // lib.mapAttrs' (key: value: lib.nameValuePair key (hllib.k8s.pathToMountName key)) cfg.volumes
-            // lib.optionalAttrs config.homelab.services.rtorrent.enable {
+            // lib.optionalAttrs config.homelab.workloads.rtorrent.enable {
               "/torrents" = "torrents";
             }
-            // lib.optionalAttrs config.homelab.services.sabnzbd.enable {
+            // lib.optionalAttrs config.homelab.workloads.sabnzbd.enable {
               "/usenet" = "usenet";
             };
           };
@@ -100,11 +100,11 @@ in
             tmp.emptyDir = { };
           }
           // lib.mapAttrs' (key: value: lib.nameValuePair (hllib.k8s.pathToMountName key) value) cfg.volumes
-          // lib.optionalAttrs config.homelab.services.rtorrent.enable {
-            torrents = config.homelab.services.rtorrent.downloadsVolume;
+          // lib.optionalAttrs config.homelab.workloads.rtorrent.enable {
+            torrents = config.homelab.workloads.rtorrent.downloadsVolume;
           }
-          // lib.optionalAttrs config.homelab.services.sabnzbd.enable {
-            usenet = config.homelab.services.sabnzbd.downloadsVolume;
+          // lib.optionalAttrs config.homelab.workloads.sabnzbd.enable {
+            usenet = config.homelab.workloads.sabnzbd.downloadsVolume;
           };
         };
       };

@@ -7,15 +7,15 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.homepage.integrations.sabnzbd;
+  cfg = config.homelab.workloads.homepage.integrations.sabnzbd;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.homepage.integrations.sabnzbd = {
+  options.homelab.workloads.homepage.integrations.sabnzbd = {
     enable = lib.mkOption {
       description = "integration of sabnzbd with homepage";
       type = lib.types.bool;
-      default = config.homelab.services.sabnzbd.enable && config.homelab.services.homepage.enable;
+      default = config.homelab.workloads.sabnzbd.enable && config.homelab.workloads.homepage.enable;
     };
   };
   imports = [
@@ -30,7 +30,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key SABNZBD_API_KEY "''${SABNZBD_API_KEY:?}"'';
       }
     ];
-    homelab.services.homepage = {
+    homelab.workloads.homepage = {
       services.Download.SABnzbd = {
         sort = 50;
         icon = "sabnzbd.png";

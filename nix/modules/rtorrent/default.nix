@@ -9,7 +9,7 @@ let
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.rtorrent = {
+  options.homelab.workloads.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
     debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
@@ -22,7 +22,7 @@ in
     let
       ccfg = config.homelab.cluster;
       container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
-      cfg = config.homelab.services.rtorrent;
+      cfg = config.homelab.workloads.rtorrent;
       kubelib = inputs.kube-generators.lib { inherit pkgs; };
       bittorrentPort = 6881;
       dhtPort = 6881;
@@ -95,7 +95,7 @@ in
           // lib.optionalAttrs (config.homelab.privacyVPN.enable) {
             "cluster.local/egress-gateway" = "privacy-vpn";
           };
-          template.servicePodSpec = {
+          template.podSpecMacro = {
             name = "rtorrent";
             terminationGracePeriodSeconds = 10;
             initContainersByName.rm-locks = {
@@ -281,13 +281,13 @@ in
         };
         service = {
           apiVersion = "cluster.local";
-          kind = "ServiceService";
+          kind = "ServiceMacro";
           metadata.name = "rtorrent";
           spec.portsByName.scgi = 5000;
         };
         netpols = {
           apiVersion = "cluster.local";
-          kind = "ServiceNetpols";
+          kind = "NetpolMacro";
           metadata.name = "rtorrent";
           spec.ports = [ 5000 ];
         };

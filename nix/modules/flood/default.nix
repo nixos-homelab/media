@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.flood;
+  cfg = config.homelab.flood;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/flood";
     copyToRoot = [
@@ -21,7 +21,7 @@ let
   };
 in
 {
-  options.homelab.services.flood = {
+  options.homelab.flood = {
     enable = lib.mkEnableOption "flood";
     debug = lib.mkEnableOption "debug mode";
   };
@@ -29,20 +29,20 @@ in
   config = lib.mkIf cfg.enable {
     assertions = [
       {
-        assertion = config.homelab.services.rtorrent.enable;
-        message = "The rtorrent service must be enabled in order for flood to work (homelab.services.rtorrent.enable)";
+        assertion = config.homelab.rtorrent.enable;
+        message = "The rtorrent service must be enabled in order for flood to work (homelab.rtorrent.enable)";
       }
     ];
     services.k3s.images = [ image ];
     kubetree.resources.flood.content = {
       apiVersion = "cluster.local";
-      kind = "ServiceMacro";
+      kind = "WorkloadMacro";
       metadata.name = "flood";
       spec = {
         allowEgress = [ "rtorrent" ];
         ingressPort = 3000;
         dataPath = "/data";
-        servicePodSpec.mainContainer = {
+        podSpecMacro.mainContainer = {
           image = "${image.buildArgs.name}:${image.imageTag}";
           imagePullPolicy = "Never";
           args = [
@@ -57,7 +57,7 @@ in
           readinessProbe.httpGet.port = "web";
           volumeMountsByPath."/torrents" = "downloads";
         };
-        servicePodSpec.volumesByName.downloads = config.homelab.services.rtorrent.downloadsVolume;
+        podSpecMacro.volumesByName.downloads = config.homelab.rtorrent.downloadsVolume;
       };
     };
   };

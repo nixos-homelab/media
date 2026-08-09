@@ -7,15 +7,15 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.homepage.integrations.sonarr;
+  cfg = config.homelab.workloads.homepage.integrations.sonarr;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.homepage.integrations.sonarr = {
+  options.homelab.workloads.homepage.integrations.sonarr = {
     enable = lib.mkOption {
       description = "integration of sonarr with homepage";
       type = lib.types.bool;
-      default = config.homelab.services.sonarr.enable && config.homelab.services.homepage.enable;
+      default = config.homelab.workloads.sonarr.enable && config.homelab.workloads.homepage.enable;
     };
   };
   imports = [
@@ -30,7 +30,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sonarr-api-key SONARR_API_KEY "''${SONARR_API_KEY:?}"'';
       }
     ];
-    homelab.services.homepage = {
+    homelab.workloads.homepage = {
       services.Managers.Sonarr = {
         sort = 50;
         icon = "sonarr.png";

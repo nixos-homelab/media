@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   hllib = inputs.homelab-shared.lib;
-  cfg = config.homelab.services.plex;
+  cfg = config.homelab.workloads.plex;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
@@ -27,8 +27,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.service-macros.securityContext.runAsUser} plex
-      useradd -r -u ${toString config.kubetree.service-macros.securityContext.runAsGroup} -g plex -d / plex
+      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} plex
+      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g plex -d / plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';
@@ -38,7 +38,7 @@ let
   };
 in
 {
-  options.homelab.services.plex = {
+  options.homelab.workloads.plex = {
     # Run `kubectl port-forward -n plex plex-... 32400` after startup to set it up
     # The setup procedure is only enabled when accessing the server via localhost:32400/web
     enable = lib.mkEnableOption "Plex Media Server";
@@ -81,7 +81,7 @@ in
           issuerRef = {
             group = "cert-manager.io";
             kind = "ClusterIssuer";
-            name = config.kubetree.service-macros.acmeProvider;
+            name = config.kubetree.workload-macros.acmeProvider;
           };
           keystores.pkcs12 = {
             create = true;
@@ -122,13 +122,13 @@ in
       };
       service-macro = {
         apiVersion = "cluster.local";
-        kind = "ServiceMacro";
+        kind = "WorkloadMacro";
         metadata.name = "plex";
         spec = {
           allowIngress = [ "local-lan" ];
           allowEgress = [ "internet" ];
           dataPath = "/Library";
-          servicePodSpec = {
+          podSpecMacro = {
             initContainersByName.rm-lock = {
               image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
               imagePullPolicy = "Never";

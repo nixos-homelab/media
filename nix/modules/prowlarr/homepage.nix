@@ -7,15 +7,15 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.homepage.integrations.prowlarr;
+  cfg = config.homelab.workloads.homepage.integrations.prowlarr;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.homepage.integrations.prowlarr = {
+  options.homelab.workloads.homepage.integrations.prowlarr = {
     enable = lib.mkOption {
       description = "integration of prowlarr with homepage";
       type = lib.types.bool;
-      default = config.homelab.services.prowlarr.enable && config.homelab.services.homepage.enable;
+      default = config.homelab.workloads.prowlarr.enable && config.homelab.workloads.homepage.enable;
     };
   };
   imports = [
@@ -30,7 +30,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage prowlarr-api-key PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}"'';
       }
     ];
-    homelab.services.homepage = {
+    homelab.workloads.homepage = {
       services.Managers.Prowlarr = {
         sort = 200;
         icon = "prowlarr.png";
