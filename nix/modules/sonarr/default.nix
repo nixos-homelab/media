@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.sonarr;
+  cfg = config.homelab.sonarr;
   hllib = inputs.homelab-shared.lib;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sonarr";
@@ -33,7 +33,7 @@ let
   };
 in
 {
-  options.homelab.workloads.sonarr = {
+  options.homelab.sonarr = {
     enable = lib.mkEnableOption "sonarr";
     debug = lib.mkEnableOption "debug mode";
     mountPaths = lib.mkOption {
@@ -93,10 +93,10 @@ in
               "/tmp" = "tmp";
             }
             // lib.mapAttrs' (key: value: lib.nameValuePair key (hllib.k8s.pathToMountName key)) cfg.volumes
-            // lib.optionalAttrs config.homelab.workloads.rtorrent.enable {
+            // lib.optionalAttrs config.homelab.rtorrent.enable {
               "/torrents" = "torrents";
             }
-            // lib.optionalAttrs config.homelab.workloads.sabnzbd.enable {
+            // lib.optionalAttrs config.homelab.sabnzbd.enable {
               "/usenet" = "usenet";
             };
           };
@@ -104,11 +104,11 @@ in
             tmp.emptyDir = { };
           }
           // lib.mapAttrs' (key: value: lib.nameValuePair (hllib.k8s.pathToMountName key) value) cfg.volumes
-          // lib.optionalAttrs config.homelab.workloads.rtorrent.enable {
-            torrents = config.homelab.workloads.rtorrent.downloadsVolume;
+          // lib.optionalAttrs config.homelab.rtorrent.enable {
+            torrents = config.homelab.rtorrent.downloadsVolume;
           }
-          // lib.optionalAttrs config.homelab.workloads.sabnzbd.enable {
-            usenet = config.homelab.workloads.sabnzbd.downloadsVolume;
+          // lib.optionalAttrs config.homelab.sabnzbd.enable {
+            usenet = config.homelab.sabnzbd.downloadsVolume;
           };
         };
       };

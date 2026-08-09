@@ -6,19 +6,19 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.homepage.integrations.flood;
+  cfg = config.homelab.homepage.integrations.flood;
 in
 {
-  options.homelab.workloads.homepage.integrations.flood = {
+  options.homelab.homepage.integrations.flood = {
     enable = lib.mkOption {
       description = "integration of flood with homepage";
       type = lib.types.bool;
-      default = config.homelab.workloads.flood.enable && config.homelab.workloads.homepage.enable;
+      default = config.homelab.flood.enable && config.homelab.homepage.enable;
     };
   };
   imports = [ inputs.homelab-shared.nixosModules.homepage ];
   config = lib.mkIf cfg.enable {
-    homelab.workloads.homepage = {
+    homelab.homepage = {
       services.Download.Flood = {
         icon = "flood.png";
         description = "rTorrent WebUI";

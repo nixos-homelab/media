@@ -7,15 +7,15 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.homepage.integrations.radarr;
+  cfg = config.homelab.homepage.integrations.radarr;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.workloads.homepage.integrations.radarr = {
+  options.homelab.homepage.integrations.radarr = {
     enable = lib.mkOption {
       description = "integration of radarr with homepage";
       type = lib.types.bool;
-      default = config.homelab.workloads.radarr.enable && config.homelab.workloads.homepage.enable;
+      default = config.homelab.radarr.enable && config.homelab.homepage.enable;
     };
   };
   imports = [
@@ -30,7 +30,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key RADARR_API_KEY "''${RADARR_API_KEY:?}"'';
       }
     ];
-    homelab.workloads.homepage = {
+    homelab.homepage = {
       services.Managers.Radarr = {
         sort = 70;
         icon = "radarr.png";

@@ -9,7 +9,7 @@ let
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.workloads.rtorrent = {
+  options.homelab.rtorrent = {
     enable = lib.mkEnableOption "rtorrent";
     debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
@@ -22,7 +22,7 @@ in
     let
       ccfg = config.homelab.cluster;
       container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
-      cfg = config.homelab.workloads.rtorrent;
+      cfg = config.homelab.rtorrent;
       kubelib = inputs.kube-generators.lib { inherit pkgs; };
       bittorrentPort = 6881;
       dhtPort = 6881;

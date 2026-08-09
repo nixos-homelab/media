@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   hllib = inputs.homelab-shared.lib;
-  cfg = config.homelab.workloads.plex;
+  cfg = config.homelab.plex;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
@@ -38,7 +38,7 @@ let
   };
 in
 {
-  options.homelab.workloads.plex = {
+  options.homelab.plex = {
     # Run `kubectl port-forward -n plex plex-... 32400` after startup to set it up
     # The setup procedure is only enabled when accessing the server via localhost:32400/web
     enable = lib.mkEnableOption "Plex Media Server";

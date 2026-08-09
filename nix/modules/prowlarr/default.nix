@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.prowlarr;
+  cfg = config.homelab.prowlarr;
   hllib = inputs.homelab-shared.lib;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
@@ -33,7 +33,7 @@ let
   };
 in
 {
-  options.homelab.workloads.prowlarr = {
+  options.homelab.prowlarr = {
     enable = lib.mkEnableOption "prowlarr";
     debug = lib.mkEnableOption "debug mode";
   };

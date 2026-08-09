@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.sabnzbd;
+  cfg = config.homelab.sabnzbd;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   image = pkgs.dockerTools.buildImage {
@@ -34,7 +34,7 @@ let
   };
 in
 {
-  options.homelab.workloads.sabnzbd = {
+  options.homelab.sabnzbd = {
     enable = lib.mkEnableOption "sabnzbd";
     debug = lib.mkEnableOption "debug mode";
     downloadsVolume = lib.mkOption {
