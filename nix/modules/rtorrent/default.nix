@@ -80,23 +80,15 @@ in
       };
 
       deployment = {
-        apiVersion = "apps/v1";
-        kind = "Deployment";
+        apiVersion = "cluster.local";
+        kind = "DeploymentMacro";
         metadata.name = "rtorrent";
-        metadata.namespace = "rtorrent";
-        metadata.labels."app.kubernetes.io/name" = "rtorrent";
         spec = {
-          strategy.type = "Recreate";
-          selector.matchLabels."app.kubernetes.io/name" = "rtorrent";
-          template.metadata.labels = {
-            "app.kubernetes.io/name" = "rtorrent";
-            "cluster.local/internet-egress" = "allow";
-          }
-          // lib.optionalAttrs (config.homelab.privacyVPN.enable) {
+          allowEgress = [ "internet" ];
+          template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
             "cluster.local/egress-gateway" = "privacy-vpn";
           };
-          template.podSpecMacro = {
-            name = "rtorrent";
+          podSpecMacro = {
             terminationGracePeriodSeconds = 10;
             initContainersByName.rm-locks = {
               image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
