@@ -157,20 +157,23 @@ in
                 "/var/tmp" = "var-tmp";
                 "/tmp" = "tmp";
               }
-              // lib.mapAttrs' (
-                key: value:
-                lib.nameValuePair key {
-                  name = (hllib.k8s.pathToMountName key);
+              // lib.mapAttrs' (name: value: {
+                inherit name;
+                value = {
+                  name = (hllib.k8s.pathToMountName name);
                   readOnly = true;
-                }
-              ) cfg.volumes;
+                };
+              }) cfg.volumes;
             };
             volumesByName = {
               tls.secret.secretName = "plex-tls";
               var-tmp.emptyDir = { };
               tmp.emptyDir = { };
             }
-            // lib.mapAttrs' (key: value: lib.nameValuePair (hllib.k8s.pathToMountName key) value) cfg.volumes;
+            // lib.mapAttrs' (name: value: {
+              name = (hllib.k8s.pathToMountName name);
+              inherit value;
+            }) cfg.volumes;
           };
         };
       };

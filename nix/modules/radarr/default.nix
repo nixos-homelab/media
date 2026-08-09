@@ -88,7 +88,10 @@ in
             volumeMountsByPath = {
               "/tmp" = "tmp";
             }
-            // lib.mapAttrs' (key: value: lib.nameValuePair key (hllib.k8s.pathToMountName key)) cfg.volumes
+            // lib.mapAttrs' (name: value: {
+              inherit name;
+              value = (hllib.k8s.pathToMountName name);
+            }) cfg.volumes
             // lib.optionalAttrs config.homelab.rtorrent.enable {
               "/torrents" = "torrents";
             }
@@ -99,7 +102,10 @@ in
           volumesByName = {
             tmp.emptyDir = { };
           }
-          // lib.mapAttrs' (key: value: lib.nameValuePair (hllib.k8s.pathToMountName key) value) cfg.volumes
+          // lib.mapAttrs' (name: value: {
+            name = (hllib.k8s.pathToMountName name);
+            inherit value;
+          }) cfg.volumes
           // lib.optionalAttrs config.homelab.rtorrent.enable {
             torrents = config.homelab.rtorrent.downloadsVolume;
           }
