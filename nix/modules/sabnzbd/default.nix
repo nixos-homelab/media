@@ -84,6 +84,7 @@ in
                 complete_dir = /usenet/complete
                 schedlines = "1 0 21 7 create_backup ",
                 backup_dir = "/data/backups"
+                permissions = 775
                 EOF
               ''
             ];
