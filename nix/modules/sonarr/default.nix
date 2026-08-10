@@ -55,7 +55,7 @@ in
     };
     homelab.cluster.backup.volumes.sonarr.sonarr = [ "/Backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.sonarr.content = {
+    kubetree.resources.sonarr.workload = {
       apiVersion = "cluster.local";
       kind = "WorkloadMacro";
       metadata.name = "sonarr";

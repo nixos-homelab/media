@@ -57,7 +57,7 @@ in
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.sabnzbd.content = {
+    kubetree.resources.sabnzbd.workload = {
       apiVersion = "cluster.local";
       kind = "WorkloadMacro";
       metadata.name = "sabnzbd";

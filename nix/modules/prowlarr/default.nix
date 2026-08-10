@@ -45,7 +45,7 @@ in
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.prowlarr.content = {
+    kubetree.resources.prowlarr.workload = {
       apiVersion = "cluster.local";
       kind = "WorkloadMacro";
       metadata.name = "prowlarr";

@@ -34,7 +34,7 @@ in
       }
     ];
     services.k3s.images = [ image ];
-    kubetree.resources.flood.content = {
+    kubetree.resources.flood.workload = {
       apiVersion = "cluster.local";
       kind = "WorkloadMacro";
       metadata.name = "flood";

@@ -50,7 +50,7 @@ in
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.radarr.content = {
+    kubetree.resources.radarr.workload = {
       apiVersion = "cluster.local";
       kind = "WorkloadMacro";
       metadata.name = "radarr";

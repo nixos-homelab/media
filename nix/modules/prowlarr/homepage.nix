@@ -13,7 +13,7 @@ in
 {
   options.homelab.homepage.integrations.prowlarr = {
     enable = lib.mkOption {
-      description = "integration of prowlarr with homepage";
+      description = "Whether to integrate Prowlarr with homepage";
       type = lib.types.bool;
       default = config.homelab.prowlarr.enable && config.homelab.homepage.enable;
     };
