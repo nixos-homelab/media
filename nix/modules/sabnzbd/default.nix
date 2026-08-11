@@ -51,7 +51,7 @@ in
     setup-secrets.sources.SABNZBD_API_KEY = {
       description = "SABnzbd API Key";
       cmd = hllib.setup-secrets.mkScript pkgs ''
-        kubectl exec -n sabnzbd -c sabnzbd deploy/sabnzbd -- ${lib.getExe pkgs.gnugrep} '^api_key = ' "/data/sabnzbd.ini" | \
+        ${lib.getExe pkgs.kubectl} exec -n sabnzbd -c sabnzbd deploy/sabnzbd -- ${lib.getExe pkgs.gnugrep} '^api_key = ' "/data/sabnzbd.ini" | \
           cut -d ' ' -f3
       '';
     };
