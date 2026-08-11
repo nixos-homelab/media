@@ -26,8 +26,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} sonarr
-      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g sonarr -d /data sonarr
+      groupadd -r -g ${toString config.kubetree.workloadMacros.securityContext.runAsUser} sonarr
+      useradd -r -u ${toString config.kubetree.workloadMacros.securityContext.runAsGroup} -g sonarr -d /data sonarr
     '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.sonarr) ];
   };
