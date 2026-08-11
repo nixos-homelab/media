@@ -37,7 +37,13 @@ in
     enable = lib.mkEnableOption "prowlarr";
     debug = lib.mkEnableOption "debug mode";
   };
-  imports = [ inputs.setup-secrets.nixosModules.default ] ++ self.lib.importsApply [ ./homepage.nix ];
+  imports = [
+    inputs.setup-secrets.nixosModules.default
+  ]
+  ++ self.lib.importsApply [
+    ./homepage.nix
+    ./integration.nix
+  ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PROWLARR_API_KEY = {
       description = "Prowlarr API Key";
