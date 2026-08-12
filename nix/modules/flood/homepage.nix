@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 {
   lib,
   config,
@@ -25,7 +25,7 @@ in
         href = "https://flood.${ccfg.domain}";
         widget = {
           type = "flood";
-          url = "http://flood.flood:3000";
+          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.flood.workload;
         };
       };
       allowEgress = [ "flood" ];

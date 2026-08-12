@@ -38,7 +38,7 @@ in
         href = "https://sabnzbd.${ccfg.domain}";
         widget = {
           type = "sabnzbd";
-          url = "http://sabnzbd.sabnzbd:8080";
+          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sabnzbd.workload;
           key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
         };
       };

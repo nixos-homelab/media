@@ -38,7 +38,7 @@ in
         href = "https://prowlarr.${ccfg.domain}";
         widget = {
           type = "prowlarr";
-          url = "http://prowlarr.prowlarr:9696";
+          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
           key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
         };
       };

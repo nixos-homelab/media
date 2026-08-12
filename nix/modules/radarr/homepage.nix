@@ -38,7 +38,7 @@ in
         href = "https://radarr.${ccfg.domain}";
         widget = {
           type = "radarr";
-          url = "http://radarr.radarr:7878";
+          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload;
           key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
         };
       };

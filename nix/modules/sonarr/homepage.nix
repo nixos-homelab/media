@@ -38,7 +38,7 @@ in
         href = "https://sonarr.${ccfg.domain}";
         widget = {
           type = "sonarr";
-          url = "http://sonarr.sonarr:8989";
+          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload;
           key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
         };
       };
