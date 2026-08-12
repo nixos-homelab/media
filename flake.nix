@@ -58,6 +58,7 @@
         flake = {
           lib = {
             importsApply = map (path: importApply path { inherit self inputs; });
+            integration = import ./nix/lib/integration.nix { inherit lib inputs; };
           };
           nixosModules = {
             flood = importApply ./nix/modules/flood { inherit self inputs; };
