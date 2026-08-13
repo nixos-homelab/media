@@ -25,7 +25,10 @@ in
     enable = lib.mkEnableOption "flood";
     debug = lib.mkEnableOption "debug mode";
   };
-  imports = self.lib.importsApply [ ./homepage.nix ];
+  imports = self.lib.importsApply [
+    ./homepage.nix
+    ./integration.nix
+  ];
   config = lib.mkIf cfg.enable {
     assertions = [
       {

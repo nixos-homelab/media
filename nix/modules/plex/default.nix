@@ -54,7 +54,13 @@ in
       default = { };
     };
   };
-  imports = [ inputs.setup-secrets.nixosModules.default ] ++ self.lib.importsApply [ ./homepage.nix ];
+  imports = [
+    inputs.setup-secrets.nixosModules.default
+  ]
+  ++ self.lib.importsApply [
+    ./integration.nix
+    ./homepage.nix
+  ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PLEX_API_KEY = {
       description = "Plex API Key";

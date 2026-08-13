@@ -46,7 +46,10 @@ in
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-networking.nixosModules.privacy-vpn
   ]
-  ++ self.lib.importsApply [ ./homepage.nix ];
+  ++ self.lib.importsApply [
+    ./integration.nix
+    ./homepage.nix
+  ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.SABNZBD_API_KEY = {
       description = "SABnzbd API Key";

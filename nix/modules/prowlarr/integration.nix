@@ -9,60 +9,43 @@ with builtins;
 let
   cfg = config.homelab.prowlarr;
   hllib = inputs.homelab-shared.lib;
-  prowlarrUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
   integrations =
     lib.mapAttrsToList
       (
         name: spec:
-        lib.recursiveUpdate (
-          let
-            hasApiKey = lib.attrByPath [ "hasApiKey" ] true spec;
-          in
-          {
-            inherit name hasApiKey;
-            title = self.lib.integration.capitalize name;
-            authApiKeyVar = "PROWLARR_API_KEY";
-            apiUrl = prowlarrUrl;
-          }
-          // (lib.optionalAttrs hasApiKey { apiKeyVar = "${lib.toUpper name}_API_KEY"; })
-          // ({
-            applications.extraSettings = {
-              syncLevel = "fullSync";
-              fields = {
-                prowlarrUrl = prowlarrUrl;
-                baseUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.${name}.workload;
-              };
-            };
-            downloadclient.extraSettings = {
-              priority = 1;
-              categories = [ ];
-              supportsCategories = true;
-              fields = self.lib.integration.workloadServiceHostPort config.kubetree.resources.${name}.workload;
-            };
-          }).${spec.apiType}
-        ) spec
-      )
-      (
-        lib.filterAttrs (name: spec: cfg.integrations.${name}.enable) {
-          sonarr.apiType = "applications";
-          radarr.apiType = "applications";
-          flood = {
-            apiType = "downloadclient";
-            hasApiKey = false;
-            extraSettings = {
-              protocol = "torrent";
-              fields.tags = [ "prowlarr" ];
+        lib.recursiveUpdate {
+          inherit name;
+          authApiKeyVar = "PROWLARR_API_KEY";
+          apiKeyFieldName = "apiKey";
+          apiKeyVar = toApiKeyVar name;
+          apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/applications";
+          settings = {
+            enable = true;
+            syncLevel = "fullSync";
+            fields = {
+              prowlarrUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
+              baseUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.${name}.workload;
             };
           };
-          sabnzbd = {
-            apiType = "downloadclient";
-            extraSettings = {
-              protocol = "usenet";
-              fields.category = "prowlarr";
-            };
+        } spec
+      )
+      (
+        lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
+          sonarr.settings = {
+            name = "Sonarr";
+            implementationName = "Sonarr";
+            implementation = "Sonarr";
+            configContract = "SonarrSettings";
+          };
+          radarr.settings = {
+            name = "Radarr";
+            implementationName = "Radarr";
+            implementation = "Radarr";
+            configContract = "RadarrSettings";
           };
         }
       );
+  toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
 in
 {
   options.homelab.prowlarr.integrations = {
@@ -75,16 +58,6 @@ in
       description = "Whether to integrate Prowlarr with Radarr";
       type = lib.types.bool;
       default = config.homelab.prowlarr.enable && config.homelab.radarr.enable;
-    };
-    flood.enable = lib.mkOption {
-      description = "Whether to integrate Prowlarr with Flood";
-      type = lib.types.bool;
-      default = config.homelab.prowlarr.enable && config.homelab.flood.enable;
-    };
-    sabnzbd.enable = lib.mkOption {
-      description = "Whether to integrate Prowlarr with SABnzbd";
-      type = lib.types.bool;
-      default = config.homelab.prowlarr.enable && config.homelab.sabnzbd.enable;
     };
   };
   config = {
@@ -101,7 +74,15 @@ in
     ];
     kubetree.resources.prowlarr = lib.mergeAttrsList (
       map (spec: {
-        "${spec.name}-integration" = self.lib.integration.mkIntegrationJob spec;
+        "${spec.name}-integration" = {
+          apiVersion = "cluster.local";
+          kind = "ScriptMacro";
+          metadata.namespace = "prowlarr";
+          metadata.name = "integrate-${spec.name}";
+          spec.allowEgress = [ "prowlarr" ];
+          spec.script = self.lib.integration.mkArrStackIntegrationScript spec;
+          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
+        };
       }) integrations
     );
   };
