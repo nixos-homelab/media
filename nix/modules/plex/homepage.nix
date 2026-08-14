@@ -37,7 +37,7 @@ in
         href = "https://plex.${ccfg.domain}";
         widget = {
           type = "plex";
-          url = "http://plex.plex:32400";
+          url = "https://plex.plex:32400";
           fields = [
             "streams"
             "movies"
