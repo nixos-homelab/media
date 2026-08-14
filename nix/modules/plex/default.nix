@@ -71,6 +71,16 @@ in
     };
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
     services.k3s.images = [ image ];
+    setup-secrets.destinations = [
+      {
+        logPrefix = "Plex API key";
+        requires = [ "PLEX_API_KEY" ];
+        cmd = hllib.setup-secrets.mkScript pkgs ''
+          setKubeSecret plex plex-api-key \
+            PLEX_API_KEY "''${PLEX_API_KEY:?}"
+        '';
+      }
+    ];
     kubetree.resources.plex = {
       certificate = {
         apiVersion = "cert-manager.io/v1";
@@ -96,6 +106,54 @@ in
           };
         };
       };
+      configure-plex =
+        let
+          domain =
+            config.kubetree.resources.plex.external-service.metadata.annotations."external-dns.alpha.kubernetes.io/hostname";
+          workload = config.kubetree.resources.plex.workload;
+          host = "${workload.metadata.name}.${
+            lib.attrByPath [ "namespace" ] workload.metadata.name workload.metadata
+          }";
+          port = workload.spec.podSpecMacro.mainContainer.portsByName.web;
+          apiUrl = "https://${host}:${builtins.toString port}/:/prefs";
+          queryParams = {
+            IPNetworkType =
+              {
+                "10" = "v4only";
+                "01" = "v6only";
+                "11" = "dualstack";
+              }
+              ."${builtins.toString ccfg.enableIPv4}${builtins.toString ccfg.enableIPv6}";
+            secureConnections = "0";
+            DisableTLSv1_0 = "1";
+            customConnections = "https://${domain}:443/";
+            customCertificatePath = "/tls/keystore.p12";
+            customCertificateKey = config.kubetree.resources.plex.certificate.spec.keystores.pkcs12.password;
+            customCertificateDomain = domain;
+          };
+          queryString = lib.join "&" (
+            lib.mapAttrsToList (name: value: "${name}=${lib.escapeURL value}") queryParams
+          );
+        in
+        {
+          apiVersion = "cluster.local";
+          kind = "ScriptMacro";
+          metadata.namespace = "plex";
+          metadata.name = "configure";
+          spec.allowEgress = [ "plex" ];
+          spec.script = ''
+            set -eo pipefail
+            echo "Configuring Plex" >&2
+            if curl --insecure -sfX PUT '${apiUrl}?${queryString}' \
+              -H "X-Plex-Token: ''${PLEX_API_KEY:?}"; then
+              echo "Successfully configured Plex" >&2
+            else
+              echo "Failed to configure Plex" >&2
+              exit 1
+            fi
+          '';
+          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "plex-api-key"; } ];
+        };
       external-service = {
         apiVersion = "v1";
         kind = "Service";
