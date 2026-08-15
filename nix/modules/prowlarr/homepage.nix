@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (PROWLARR_API_KEY)";
         requires = [ "PROWLARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage prowlarr-api-key PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage prowlarr-api-key HOMEPAGE_VAR_PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}"'';
       }
     ];
     homelab.homepage = {
@@ -42,10 +42,7 @@ in
           key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
         };
       };
-      envByName.HOMEPAGE_VAR_PROWLARR_API_KEY.valueFrom.secretKeyRef = {
-        name = "prowlarr-api-key";
-        key = "PROWLARR_API_KEY";
-      };
+      envFrom = [ { secretRef.name = "prowlarr-api-key"; } ];
       allowEgress = [ "prowlarr" ];
     };
   };

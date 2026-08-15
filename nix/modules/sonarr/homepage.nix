@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (SONARR_API_KEY)";
         requires = [ "SONARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sonarr-api-key SONARR_API_KEY "''${SONARR_API_KEY:?}"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sonarr-api-key HOMEPAGE_VAR_SONARR_API_KEY "''${SONARR_API_KEY:?}"'';
       }
     ];
     homelab.homepage = {
@@ -42,10 +42,7 @@ in
           key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
         };
       };
-      envByName.HOMEPAGE_VAR_SONARR_API_KEY.valueFrom.secretKeyRef = {
-        name = "sonarr-api-key";
-        key = "SONARR_API_KEY";
-      };
+      envFrom = [ { secretRef.name = "sonarr-api-key"; } ];
       allowEgress = [ "sonarr" ];
     };
   };

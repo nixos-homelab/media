@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (RADARR_API_KEY)";
         requires = [ "RADARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key RADARR_API_KEY "''${RADARR_API_KEY:?}"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key HOMEPAGE_VAR_RADARR_API_KEY "''${RADARR_API_KEY:?}"'';
       }
     ];
     homelab.homepage = {
@@ -42,10 +42,7 @@ in
           key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
         };
       };
-      envByName.HOMEPAGE_VAR_RADARR_API_KEY.valueFrom.secretKeyRef = {
-        name = "radarr-api-key";
-        key = "RADARR_API_KEY";
-      };
+      envFrom = [ { secretRef.name = "radarr-api-key"; } ];
       allowEgress = [ "radarr" ];
     };
   };

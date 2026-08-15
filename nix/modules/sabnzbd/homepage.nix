@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (SABNZBD_API_KEY)";
         requires = [ "SABNZBD_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key SABNZBD_API_KEY "''${SABNZBD_API_KEY:?}"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key HOMEPAGE_VAR_SABNZBD_API_KEY "''${SABNZBD_API_KEY:?}"'';
       }
     ];
     homelab.homepage = {
@@ -42,10 +42,7 @@ in
           key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
         };
       };
-      envByName.HOMEPAGE_VAR_SABNZBD_API_KEY.valueFrom.secretKeyRef = {
-        name = "sabnzbd-api-key";
-        key = "SABNZBD_API_KEY";
-      };
+      envFrom = [ { secretRef.name = "sabnzbd-api-key"; } ];
       allowEgress = [ "sabnzbd" ];
     };
   };

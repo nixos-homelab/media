@@ -13,7 +13,7 @@ in
 {
   options.homelab.homepage.integrations.plex = {
     enable = lib.mkOption {
-      description = "integration of plex with homepage";
+      description = "integration of Plex with homepage";
       type = lib.types.bool;
       default = config.homelab.plex.enable && config.homelab.homepage.enable;
     };
@@ -27,7 +27,7 @@ in
       {
         logPrefix = "Homepage (PLEX_API_KEY)";
         requires = [ "PLEX_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key PLEX_API_KEY "''${PLEX_API_KEY:?}"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key HOMEPAGE_VAR_PLEX_API_KEY "''${PLEX_API_KEY:?}"'';
       }
     ];
     homelab.homepage = {
@@ -46,10 +46,7 @@ in
           key = "{{HOMEPAGE_VAR_PLEX_API_KEY}}";
         };
       };
-      envByName.HOMEPAGE_VAR_PLEX_API_KEY.valueFrom.secretKeyRef = {
-        name = "plex-api-key";
-        key = "PLEX_API_KEY";
-      };
+      envFrom = [ { secretRef.name = "plex-api-key"; } ];
       allowEgress = [ "plex" ];
     };
   };

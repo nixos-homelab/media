@@ -64,7 +64,7 @@ in
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PLEX_API_KEY = {
       description = "Plex API Key";
-      cmd = inputs.homelab-shared.lib.setup-secrets.mkScript pkgs ''
+      cmd = hllib.setup-secrets.mkScript pkgs ''
         kubectl exec -n plex -c plex deploy/plex -- \
           xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"
       '';
