@@ -60,7 +60,7 @@ in
     prowlarr.enable = lib.mkOption {
       description = "Whether to integrate Flood with Prowlarr";
       type = lib.types.bool;
-      default = config.homelab.flood.enable && config.homelab.sonarr.enable;
+      default = config.homelab.flood.enable && config.homelab.prowlarr.enable;
     };
   };
   config = {
