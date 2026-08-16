@@ -55,16 +55,19 @@ in
       description = "Whether to integrate SABNzbd with Sonarr";
       type = lib.types.bool;
       default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
+      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
     };
     radarr.enable = lib.mkOption {
       description = "Whether to integrate SABNzbd with Radarr";
       type = lib.types.bool;
       default = config.homelab.sabnzbd.enable && config.homelab.radarr.enable;
+      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.radarr.enable";
     };
     prowlarr.enable = lib.mkOption {
       description = "Whether to integrate SABNzbd with Prowlarr";
       type = lib.types.bool;
       default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
+      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
     };
   };
   config = {

@@ -16,6 +16,7 @@ in
       description = "integration of radarr with homepage";
       type = lib.types.bool;
       default = config.homelab.radarr.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.radarr.enable && config.homelab.homepage.enable";
     };
   };
   imports = [

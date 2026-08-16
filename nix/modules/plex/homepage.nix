@@ -16,6 +16,7 @@ in
       description = "integration of Plex with homepage";
       type = lib.types.bool;
       default = config.homelab.plex.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.homepage.enable";
     };
   };
   imports = [

@@ -16,6 +16,7 @@ in
       description = "integration of sonarr with homepage";
       type = lib.types.bool;
       default = config.homelab.sonarr.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.sonarr.enable && config.homelab.homepage.enable";
     };
   };
   imports = [

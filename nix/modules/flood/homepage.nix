@@ -14,6 +14,7 @@ in
       description = "integration of flood with homepage";
       type = lib.types.bool;
       default = config.homelab.flood.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.homepage.enable";
     };
   };
   imports = [ inputs.homelab-shared.nixosModules.homepage ];

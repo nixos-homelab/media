@@ -16,6 +16,7 @@ in
       description = "Whether to integrate Prowlarr with homepage";
       type = lib.types.bool;
       default = config.homelab.prowlarr.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.homepage.enable";
     };
   };
   imports = [

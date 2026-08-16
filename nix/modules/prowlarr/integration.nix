@@ -53,11 +53,13 @@ in
       description = "Whether to integrate Prowlarr with Sonarr";
       type = lib.types.bool;
       default = config.homelab.prowlarr.enable && config.homelab.sonarr.enable;
+      defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.sonarr.enable";
     };
     radarr.enable = lib.mkOption {
       description = "Whether to integrate Prowlarr with Radarr";
       type = lib.types.bool;
       default = config.homelab.prowlarr.enable && config.homelab.radarr.enable;
+      defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.radarr.enable";
     };
   };
   config = {

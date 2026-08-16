@@ -59,11 +59,13 @@ in
       description = "Whether to integrate Plex with Sonarr";
       type = lib.types.bool;
       default = config.homelab.plex.enable && config.homelab.sonarr.enable;
+      defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.sonarr.enable";
     };
     radarr.enable = lib.mkOption {
       description = "Whether to integrate Plex with Radarr";
       type = lib.types.bool;
       default = config.homelab.plex.enable && config.homelab.radarr.enable;
+      defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.radarr.enable";
     };
   };
   config = {

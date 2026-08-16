@@ -51,16 +51,19 @@ in
       description = "Whether to integrate Flood with Sonarr";
       type = lib.types.bool;
       default = config.homelab.flood.enable && config.homelab.sonarr.enable;
+      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.sonarr.enable";
     };
     radarr.enable = lib.mkOption {
       description = "Whether to integrate Flood with Radarr";
       type = lib.types.bool;
       default = config.homelab.flood.enable && config.homelab.radarr.enable;
+      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.radarr.enable";
     };
     prowlarr.enable = lib.mkOption {
       description = "Whether to integrate Flood with Prowlarr";
       type = lib.types.bool;
       default = config.homelab.flood.enable && config.homelab.prowlarr.enable;
+      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.prowlarr.enable";
     };
   };
   config = {
