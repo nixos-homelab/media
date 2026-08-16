@@ -124,7 +124,7 @@ in
                 "11" = "dualstack";
               }
               ."${builtins.toString ccfg.enableIPv4}${builtins.toString ccfg.enableIPv6}";
-            secureConnections = "0";
+            secureConnections = "1"; # "Preferred", needed for Arr stack connectivity
             DisableTLSv1_0 = "1";
             customConnections = "https://${domain}:443/";
             customCertificatePath = "/tls/keystore.p12";
@@ -155,8 +155,8 @@ in
           spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "plex-api-key"; } ];
         };
       external-service = {
-        apiVersion = "v1";
-        kind = "Service";
+        apiVersion = "cluster.local";
+        kind = "ServiceMacro";
         metadata = {
           namespace = "plex";
           name = "plex-external";
@@ -172,13 +172,27 @@ in
           type = "LoadBalancer";
           selector."app.kubernetes.io/name" = "plex";
           ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
-          ports = [
-            {
-              name = "web";
-              port = 443;
-              targetPort = 32400;
-            }
-          ];
+          portsByName.web = {
+            port = 443;
+            targetPort = 32400;
+          };
+        }
+        // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
+          ipFamilyPolicy = "RequireDualStack";
+        });
+      };
+      internal-service = {
+        apiVersion = "cluster.local";
+        kind = "ServiceMacro";
+        metadata = {
+          namespace = "plex";
+          name = "plex";
+          labels."app.kubernetes.io/name" = "plex";
+        };
+        spec = {
+          selector."app.kubernetes.io/name" = "plex";
+          ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
+          portsByName.web = 32400;
         }
         // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
           ipFamilyPolicy = "RequireDualStack";
