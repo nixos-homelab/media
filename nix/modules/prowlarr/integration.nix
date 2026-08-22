@@ -31,13 +31,13 @@ let
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
-          sonarr.settings = {
+          sonarr.settings = cfg.integrations.sonarr.settings // {
             name = "Sonarr";
             implementationName = "Sonarr";
             implementation = "Sonarr";
             configContract = "SonarrSettings";
           };
-          radarr.settings = {
+          radarr.settings = cfg.integrations.radarr.settings // {
             name = "Radarr";
             implementationName = "Radarr";
             implementation = "Radarr";
@@ -49,18 +49,34 @@ let
 in
 {
   options.homelab.prowlarr.integrations = {
-    sonarr.enable = lib.mkOption {
-      description = "Whether to integrate Prowlarr with Sonarr";
-      type = lib.types.bool;
-      default = config.homelab.prowlarr.enable && config.homelab.sonarr.enable;
-      defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.sonarr.enable";
+    sonarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Prowlarr with Sonarr";
+        type = lib.types.bool;
+        default = config.homelab.prowlarr.enable && config.homelab.sonarr.enable;
+        defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.sonarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    radarr.enable = lib.mkOption {
-      description = "Whether to integrate Prowlarr with Radarr";
-      type = lib.types.bool;
-      default = config.homelab.prowlarr.enable && config.homelab.radarr.enable;
-      defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.radarr.enable";
+
+    radarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Prowlarr with Radarr";
+        type = lib.types.bool;
+        default = config.homelab.prowlarr.enable && config.homelab.radarr.enable;
+        defaultText = lib.literalExpression "config.homelab.prowlarr.enable && config.homelab.radarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
+
   };
   config = {
     setup-secrets.destinations = [

@@ -38,11 +38,15 @@ let
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
           sonarr = {
             apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
-            settings.fields.category = "tv";
+            settings = lib.recursiveUpdate {
+              fields.category = "tv";
+            } cfg.integrations.sonarr.settings;
           };
           radarr = {
             apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
-            settings.fields.category = "movies";
+            settings = lib.recursiveUpdate {
+              fields.category = "movies";
+            } cfg.integrations.radarr.settings;
           };
           prowlarr.apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
         }
@@ -51,23 +55,44 @@ let
 in
 {
   options.homelab.sabnzbd.integrations = {
-    sonarr.enable = lib.mkOption {
-      description = "Whether to integrate SABNzbd with Sonarr";
-      type = lib.types.bool;
-      default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
-      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
+    sonarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate SABNzbd with Sonarr";
+        type = lib.types.bool;
+        default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
+        defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    radarr.enable = lib.mkOption {
-      description = "Whether to integrate SABNzbd with Radarr";
-      type = lib.types.bool;
-      default = config.homelab.sabnzbd.enable && config.homelab.radarr.enable;
-      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.radarr.enable";
+    radarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate SABNzbd with Radarr";
+        type = lib.types.bool;
+        default = config.homelab.sabnzbd.enable && config.homelab.radarr.enable;
+        defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.radarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    prowlarr.enable = lib.mkOption {
-      description = "Whether to integrate SABNzbd with Prowlarr";
-      type = lib.types.bool;
-      default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
-      defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
+    prowlarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate SABNzbd with Prowlarr";
+        type = lib.types.bool;
+        default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
+        defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
   };
   config = {

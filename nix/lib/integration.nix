@@ -129,14 +129,23 @@ rec {
       data=$(curl -sfX GET '${apiEndpoint}' \
         -H 'Content-Type: application/json' \
         -H "X-Api-Key: ''${${authApiKeyVar}:?}")
-      if jq -re '.[] | select(.implementation == "${settings.implementation}")' <<<"$data" >/dev/null; then
-        echo "${title} integration already set up" >&2
+      payload='${builtins.toJSON (settings // { fields = lib.attrsToList settings.fields; })}'
+      ${lib.optionalString (apiKeyVar != null) ''
+        payload=$(jq --arg ${apiKeyVar} "''${${apiKeyVar}:?}" '.fields+=[{"name":"${apiKeyFieldName}","value":''$${apiKeyVar}}]' <<<"$payload")
+      ''}
+      if id=$(jq -re '.[] | select(.implementation == "${settings.implementation}") | .id' <<<"$data"); then
+        echo "${title} integration already set up, updating settings" >&2
+        if curl -sfX PUT "${apiEndpoint}/$id" \
+          -H 'Content-Type: application/json' \
+          -H "X-Api-Key: ''${${authApiKeyVar}:?}" \
+          -d "$payload"; then
+          echo "Successfully updated ${title} integration" >&2
+        else
+          echo "${title} integration update failed" >&2
+          exit 1
+        fi
       else
         echo "Setting up ${title} integration" >&2
-        payload='${builtins.toJSON (settings // { fields = lib.attrsToList settings.fields; })}'
-        ${lib.optionalString (apiKeyVar != null) ''
-          payload=$(jq --arg ${apiKeyVar} "''${${apiKeyVar}:?}" '.fields+=[{"name":"${apiKeyFieldName}","value":''$${apiKeyVar}}]' <<<"$payload")
-        ''}
         if curl -sfX POST '${apiEndpoint}' \
           -H 'Content-Type: application/json' \
           -H "X-Api-Key: ''${${authApiKeyVar}:?}" \

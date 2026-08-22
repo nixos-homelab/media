@@ -41,11 +41,11 @@ let
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
-          sonarr.settings = {
+          sonarr.settings = cfg.integrations.sonarr.settings // {
             onUpgrade = true;
             onImportComplete = true;
           };
-          radarr.settings = {
+          radarr.settings = cfg.integrations.radarr.settings // {
             onDownload = true;
             onUpgrade = true;
           };
@@ -55,18 +55,34 @@ let
 in
 {
   options.homelab.plex.integrations = {
-    sonarr.enable = lib.mkOption {
-      description = "Whether to integrate Plex with Sonarr";
-      type = lib.types.bool;
-      default = config.homelab.plex.enable && config.homelab.sonarr.enable;
-      defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.sonarr.enable";
+    sonarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Plex with Sonarr";
+        type = lib.types.bool;
+        default = config.homelab.plex.enable && config.homelab.sonarr.enable;
+        defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.sonarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    radarr.enable = lib.mkOption {
-      description = "Whether to integrate Plex with Radarr";
-      type = lib.types.bool;
-      default = config.homelab.plex.enable && config.homelab.radarr.enable;
-      defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.radarr.enable";
+
+    radarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Plex with Radarr";
+        type = lib.types.bool;
+        default = config.homelab.plex.enable && config.homelab.radarr.enable;
+        defaultText = lib.literalExpression "config.homelab.plex.enable && config.homelab.radarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
+
   };
   config = {
     setup-secrets.destinations = [

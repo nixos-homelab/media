@@ -38,32 +38,62 @@ let
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
-          sonarr.apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
-          radarr.apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
-          prowlarr.apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+          sonarr = {
+            apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
+            settings = cfg.integrations.sonarr.settings;
+          };
+          radarr = {
+            apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
+            settings = cfg.integrations.radarr.settings;
+          };
+          prowlarr = {
+            apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+            settings = cfg.integrations.prowlarr.settings;
+          };
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
 in
 {
   options.homelab.flood.integrations = {
-    sonarr.enable = lib.mkOption {
-      description = "Whether to integrate Flood with Sonarr";
-      type = lib.types.bool;
-      default = config.homelab.flood.enable && config.homelab.sonarr.enable;
-      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.sonarr.enable";
+    sonarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Flood with Sonarr";
+        type = lib.types.bool;
+        default = config.homelab.flood.enable && config.homelab.sonarr.enable;
+        defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.sonarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    radarr.enable = lib.mkOption {
-      description = "Whether to integrate Flood with Radarr";
-      type = lib.types.bool;
-      default = config.homelab.flood.enable && config.homelab.radarr.enable;
-      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.radarr.enable";
+    radarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Flood with Radarr";
+        type = lib.types.bool;
+        default = config.homelab.flood.enable && config.homelab.radarr.enable;
+        defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.radarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
-    prowlarr.enable = lib.mkOption {
-      description = "Whether to integrate Flood with Prowlarr";
-      type = lib.types.bool;
-      default = config.homelab.flood.enable && config.homelab.prowlarr.enable;
-      defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.prowlarr.enable";
+    prowlarr = {
+      enable = lib.mkOption {
+        description = "Whether to integrate Flood with Prowlarr";
+        type = lib.types.bool;
+        default = config.homelab.flood.enable && config.homelab.prowlarr.enable;
+        defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.prowlarr.enable";
+      };
+      settings = lib.mkOption {
+        description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
+        type = lib.types.attrsOf lib.types.anything;
+        default = { };
+      };
     };
   };
   config = {
