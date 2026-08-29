@@ -34,6 +34,9 @@ in
           {
             type = "flood";
             url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.flood.workload;
+            # Prevent issue where an empty body in the login API call causes an error
+            username = " ";
+            password = " ";
           }
         ];
       };
