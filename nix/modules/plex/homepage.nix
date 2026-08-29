@@ -22,6 +22,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -32,20 +33,24 @@ in
       }
     ];
     homelab.homepage = {
+      sections.Media.enable = lib.mkDefault true;
       services.Media.Plex = {
+        enable = lib.mkDefault true;
         icon = "plex.png";
         description = "Media center";
         href = "https://plex.${ccfg.domain}";
-        widget = {
-          type = "plex";
-          url = "https://plex.plex:32400";
-          fields = [
-            "streams"
-            "movies"
-            "tv"
-          ];
-          key = "{{HOMEPAGE_VAR_PLEX_API_KEY}}";
-        };
+        widgets = [
+          {
+            type = "plex";
+            url = "https://plex.plex:32400";
+            fields = [
+              "streams"
+              "movies"
+              "tv"
+            ];
+            key = "{{HOMEPAGE_VAR_PLEX_API_KEY}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "plex-api-key"; } ];
       allowEgress = [ "plex" ];

@@ -22,6 +22,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -32,16 +33,19 @@ in
       }
     ];
     homelab.homepage = {
-      services.Managers.Prowlarr = {
-        sort = 200;
+      sections.Media.enable = lib.mkDefault true;
+      services.Media.Prowlarr = {
+        enable = lib.mkDefault true;
         icon = "prowlarr.png";
         description = "Index scraper";
         href = "https://prowlarr.${ccfg.domain}";
-        widget = {
-          type = "prowlarr";
-          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
-          key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
-        };
+        widgets = [
+          {
+            type = "prowlarr";
+            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
+            key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "prowlarr-api-key"; } ];
       allowEgress = [ "prowlarr" ];

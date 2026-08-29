@@ -63,6 +63,7 @@
           };
           nixosModules = {
             flood = importApply ./nix/modules/flood { inherit self inputs; };
+            homepage = importApply ./nix/modules/homepage { inherit self inputs; };
             plex = importApply ./nix/modules/plex { inherit self inputs; };
             prowlarr = importApply ./nix/modules/prowlarr { inherit self inputs; };
             radarr = importApply ./nix/modules/radarr { inherit self inputs; };

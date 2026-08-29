@@ -22,6 +22,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -32,16 +33,19 @@ in
       }
     ];
     homelab.homepage = {
-      services.Managers.Sonarr = {
-        sort = 50;
+      sections.Media.enable = lib.mkDefault true;
+      services.Media.Sonarr = {
+        enable = lib.mkDefault true;
         icon = "sonarr.png";
         description = "TV Show library manager";
         href = "https://sonarr.${ccfg.domain}";
-        widget = {
-          type = "sonarr";
-          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload;
-          key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
-        };
+        widgets = [
+          {
+            type = "sonarr";
+            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload;
+            key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "sonarr-api-key"; } ];
       allowEgress = [ "sonarr" ];

@@ -22,6 +22,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -32,16 +33,19 @@ in
       }
     ];
     homelab.homepage = {
-      services.Download.SABnzbd = {
-        sort = 50;
+      sections.Media.enable = lib.mkDefault true;
+      services.Media.SABnzbd = {
+        enable = lib.mkDefault true;
         icon = "sabnzbd.png";
         description = "The automated Usenet download tool ";
         href = "https://sabnzbd.${ccfg.domain}";
-        widget = {
-          type = "sabnzbd";
-          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sabnzbd.workload;
-          key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
-        };
+        widgets = [
+          {
+            type = "sabnzbd";
+            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sabnzbd.workload;
+            key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "sabnzbd-api-key"; } ];
       allowEgress = [ "sabnzbd" ];

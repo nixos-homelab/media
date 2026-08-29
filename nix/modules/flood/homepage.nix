@@ -17,17 +17,24 @@ in
       defaultText = lib.literalExpression "config.homelab.flood.enable && config.homelab.homepage.enable";
     };
   };
-  imports = [ inputs.homelab-shared.nixosModules.homepage ];
+  imports = [
+    inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
+  ];
   config = lib.mkIf cfg.enable {
     homelab.homepage = {
-      services.Download.Flood = {
+      sections.Media.enable = lib.mkDefault true;
+      services.Media.Flood = {
+        enable = lib.mkDefault true;
         icon = "flood.png";
         description = "rTorrent WebUI";
         href = "https://flood.${ccfg.domain}";
-        widget = {
-          type = "flood";
-          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.flood.workload;
-        };
+        widgets = [
+          {
+            type = "flood";
+            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.flood.workload;
+          }
+        ];
       };
       allowEgress = [ "flood" ];
     };

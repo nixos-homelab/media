@@ -22,6 +22,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -32,16 +33,19 @@ in
       }
     ];
     homelab.homepage = {
-      services.Managers.Radarr = {
-        sort = 70;
+      sections.Media.enable = lib.mkDefault true;
+      services.Media.Radarr = {
+        enable = lib.mkDefault true;
         icon = "radarr.png";
         description = "Movie library manager";
         href = "https://radarr.${ccfg.domain}";
-        widget = {
-          type = "radarr";
-          url = self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload;
-          key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
-        };
+        widgets = [
+          {
+            type = "radarr";
+            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload;
+            key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "radarr-api-key"; } ];
       allowEgress = [ "radarr" ];
