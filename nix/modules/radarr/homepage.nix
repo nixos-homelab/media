@@ -42,7 +42,7 @@ in
         widgets = [
           {
             type = "radarr";
-            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload;
+            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.radarr.workload;
             key = "{{HOMEPAGE_VAR_RADARR_API_KEY}}";
           }
         ];

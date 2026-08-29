@@ -7,6 +7,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.flood;
+  hllib = inputs.homelab-shared.lib;
 in
 {
   options.homelab.homepage.integrations.flood = {
@@ -32,7 +33,7 @@ in
         widgets = [
           {
             type = "flood";
-            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.flood.workload;
+            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.flood.workload;
           }
         ];
       };

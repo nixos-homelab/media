@@ -42,7 +42,7 @@ in
         widgets = [
           {
             type = "sabnzbd";
-            url = self.lib.integration.workloadServiceUrl config.kubetree.resources.sabnzbd.workload;
+            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sabnzbd.workload;
             key = "{{HOMEPAGE_VAR_SABNZBD_API_KEY}}";
           }
         ];

@@ -18,13 +18,13 @@ let
           authApiKeyVar = "PROWLARR_API_KEY";
           apiKeyFieldName = "apiKey";
           apiKeyVar = toApiKeyVar name;
-          apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/applications";
+          apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/applications";
           settings = {
             enable = true;
             syncLevel = "fullSync";
             fields = {
-              prowlarrUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
-              baseUrl = self.lib.integration.workloadServiceUrl config.kubetree.resources.${name}.workload;
+              prowlarrUrl = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
+              baseUrl = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.${name}.workload;
             };
           };
         } spec

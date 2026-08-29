@@ -19,7 +19,7 @@ let
           apiKeyFieldName = "authToken";
           apiKeyVar = "PLEX_API_KEY";
           apiEndpoint = "${
-            self.lib.integration.workloadServiceUrl config.kubetree.resources.${name}.workload
+            hllib.workload-macros.workloadServiceUrl config.kubetree.resources.${name}.workload
           }/api/v3/notification";
           settings = {
             name = "Plex Media Server";

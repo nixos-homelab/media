@@ -30,25 +30,25 @@ let
             supportsCategories = true;
             removeCompletedDownloads = true;
             removeFailedDownloads = true;
-            fields = self.lib.integration.workloadServiceHostPort config.kubetree.resources.sabnzbd.workload;
+            fields = hllib.workload-macros.workloadServiceHostPort config.kubetree.resources.sabnzbd.workload;
           };
         } spec
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
           sonarr = {
-            apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
               fields.category = "tv";
             } cfg.integrations.sonarr.settings;
           };
           radarr = {
-            apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
               fields.category = "movies";
             } cfg.integrations.radarr.settings;
           };
-          prowlarr.apiEndpoint = "${self.lib.integration.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+          prowlarr.apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
