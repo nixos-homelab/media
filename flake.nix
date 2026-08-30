@@ -74,27 +74,53 @@
         };
         perSystem =
           { pkgs, system, ... }:
-          let
-            lib-docs = inputs.docs.lib.docs.lib {
-              inherit pkgs;
-              paths.lib = ./nix/lib;
-            };
-            options-docs = inputs.docs.lib.docs.options {
-              inherit pkgs;
-              modules = lib.attrValues self.nixosModules;
-              repoPath = toString self;
-              repoLinkPrefix = "https://github.com/nixos-homelab/media/blob/main";
-            };
-          in
           {
-            apps.update-docs.program = inputs.docs.lib.docs.updateRepo {
-              inherit pkgs;
-              paths."docs/lib" = "${lib-docs}/lib";
-              paths."docs/options.md" = options-docs.optionsCommonMark;
-            };
             packages = {
-              lib-docs = lib-docs;
-              options-docs = options-docs.optionsCommonMark;
+              lib-docs = inputs.docs.lib.docs.lib {
+                inherit pkgs;
+                paths.lib = ./nix/lib;
+              };
+              options-docs = inputs.docs.lib.docs.options {
+                inherit pkgs;
+                modules = lib.attrValues self.nixosModules;
+                repoPath = toString self;
+                repoLinkPrefix = "https://github.com/nixos-homelab/media/blob/main";
+                prefixGroups = {
+                  flood = [
+                    "homelab.flood"
+                    "homelab.homepage.integrations.flood"
+                  ];
+                  plex = [
+                    "homelab.plex"
+                    "homelab.homepage.integrations.plex"
+                  ];
+                  prowlarr = [
+                    "homelab.prowlarr"
+                    "homelab.homepage.integrations.prowlarr"
+                  ];
+                  radarr = [
+                    "homelab.radarr"
+                    "homelab.homepage.integrations.radarr"
+                  ];
+                  rtorrent = [
+                    "homelab.rtorrent"
+                    "homelab.homepage.integrations.rtorrent"
+                  ];
+                  sabnzbd = [
+                    "homelab.sabnzbd"
+                    "homelab.homepage.integrations.sabnzbd"
+                  ];
+                  sonarr = [
+                    "homelab.sonarr"
+                    "homelab.homepage.integrations.sonarr"
+                  ];
+                  homepage = [ "homelab.homepage.sections" ];
+                };
+              };
+              manual-docs = inputs.docs.lib.mkdocs.manual {
+                inherit pkgs;
+                rootDoc = ./README.md;
+              };
             };
           };
       }
