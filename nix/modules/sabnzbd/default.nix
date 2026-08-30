@@ -27,8 +27,8 @@ let
     # runAsRoot = ''
     #   #!${pkgs.runtimeShell}
     #   ${pkgs.dockerTools.shadowSetup}
-    #   groupadd -r -g ${toString config.kubetree.workloadMacros.securityContext.runAsUser} sabnzbd
-    #   useradd -r -u ${toString config.kubetree.workloadMacros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
+    #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} sabnzbd
+    #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
     # '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.sabnzbd) ];
   };
@@ -66,7 +66,7 @@ in
       metadata.name = "sabnzbd";
       spec = {
         allowEgress = [ "internet" ];
-        template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
+        template.metadata.labels = lib.optionalAttrs (config.homelab.privacy-vpn.enable) {
           "cluster.local/egress-gateway" = "privacy-vpn";
         };
         ingressPort = 8080;

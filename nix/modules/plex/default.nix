@@ -27,8 +27,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workloadMacros.securityContext.runAsUser} plex
-      useradd -r -u ${toString config.kubetree.workloadMacros.securityContext.runAsGroup} -g plex -d / plex
+      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} plex
+      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g plex -d / plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';
@@ -97,7 +97,7 @@ in
           issuerRef = {
             group = "cert-manager.io";
             kind = "ClusterIssuer";
-            name = config.kubetree.workloadMacros.acmeProvider;
+            name = config.kubetree.workload-macros.acmeProvider;
           };
           keystores.pkcs12 = {
             create = true;

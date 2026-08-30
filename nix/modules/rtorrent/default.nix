@@ -71,7 +71,7 @@ let
     metadata.name = "rtorrent";
     spec = {
       allowEgress = [ "internet" ];
-      template.metadata.labels = lib.optionalAttrs (config.homelab.privacyVPN.enable) {
+      template.metadata.labels = lib.optionalAttrs (config.homelab.privacy-vpn.enable) {
         "cluster.local/egress-gateway" = "privacy-vpn";
       };
       podSpecMacro = {
@@ -129,9 +129,9 @@ let
                 protocol = "TCP";
                 containerPort = bittorrentPort;
               }
-              // (lib.optionalAttrs config.homelab.privacyVPN.enable {
+              // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
                 hostPort = bittorrentPort;
-                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacyVPN.clientIP6 config.homelab.privacyVPN;
+                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
               })
             )
             (
@@ -140,9 +140,9 @@ let
                 protocol = "UDP";
                 containerPort = dhtPort;
               }
-              // (lib.optionalAttrs config.homelab.privacyVPN.enable {
+              // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
                 hostPort = dhtPort;
-                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacyVPN.clientIP6 config.homelab.privacyVPN;
+                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
               })
             )
           ];
@@ -182,7 +182,7 @@ in
     networking.firewall.allowedTCPPorts = [ bittorrentPort ];
     services.k3s.images = [ image ];
     kubetree.resources.rtorrent-deployment.deployment = deployment;
-    services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacyVPN.enable;
+    services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacy-vpn.enable;
     kubetree.resources.rtorrent = {
       world-to-rtorrent = {
         apiVersion = "cilium.io/v2";
@@ -238,7 +238,7 @@ in
       };
     };
 
-    systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacyVPN.enable) {
+    systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent";
       wantedBy = [ "timers.target" ];
       timerConfig = {
@@ -247,7 +247,7 @@ in
       };
     };
 
-    systemd.services."portmap-rtorrent" = lib.mkIf (config.homelab.privacyVPN.enable) {
+    systemd.services."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent and setup the rtorrent deployment";
       after = [
         "k3s.service"
@@ -258,7 +258,7 @@ in
       script = ''
         set -eo pipefail
         natpmpcmd() { ${lib.getExe pkgs.libnatpmp} -g ${
-          lib.maybeAttr "gatewayIP4" config.homelab.privacyVPN.gatewayIP6 config.homelab.privacyVPN
+          lib.maybeAttr "gatewayIP4" config.homelab.privacy-vpn.gatewayIP6 config.homelab.privacy-vpn
         } "$@" | tee >(cat >&2); }
         main() {
           local external_ip bittorrent_port dht_port overlay_dir
