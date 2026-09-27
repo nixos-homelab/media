@@ -179,9 +179,15 @@ in
           type = "LoadBalancer";
           selector."app.kubernetes.io/name" = "plex";
           ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
-          portsByName.web = {
-            port = 443;
-            targetPort = 32400;
+          portsByName = {
+            web = {
+              port = 443;
+              targetPort = 32400;
+            };
+            plex = {
+              port = 32400;
+              targetPort = 32400;
+            };
           };
         }
         // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
