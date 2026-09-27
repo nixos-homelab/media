@@ -55,6 +55,13 @@ in
       defaultText = ''The "local-lan" group'';
       example = lib.literalExpression ''["local-lan" "internet"]'';
     };
+    tlsDomains = lib.mkOption {
+      description = "List of domains the plex serving certificate should contain";
+      type = lib.types.listOf lib.types.str;
+      default = [ "plex.${ccfg.domain}" ];
+      defaultText = lib.literalExpression ''[ "plex.''${ccfg.domain}"]'';
+      example = lib.literalExpression ''["plex.''${ccfg.domain}" "plex.external.''${ccfg.domain}"]'';
+    };
     volumes = lib.mkOption {
       description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
       type = lib.types.attrsOf lib.types.anything;
@@ -100,7 +107,7 @@ in
         spec = {
           secretName = "plex-tls";
           commonName = "plex.${ccfg.domain}";
-          dnsNames = [ "plex.${ccfg.domain}" ];
+          dnsNames = cfg.tlsDomains;
           issuerRef = {
             group = "cert-manager.io";
             kind = "ClusterIssuer";
