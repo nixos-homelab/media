@@ -48,6 +48,13 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
     };
+    allowIngress = lib.mkOption {
+      description = "Which services and groups should be allowed to access Plex";
+      type = lib.types.listOf lib.types.str;
+      default = [ "local-lan" ];
+      defaultText = ''The "local-lan" group'';
+      example = lib.literalExpression ''["local-lan" "internet"]'';
+    };
     volumes = lib.mkOption {
       description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
       type = lib.types.attrsOf lib.types.anything;
@@ -203,7 +210,7 @@ in
         kind = "WorkloadMacro";
         metadata.name = "plex";
         spec = {
-          allowIngress = [ "local-lan" ];
+          allowIngress = cfg.allowIngress;
           allowEgress = [ "internet" ];
           dataPath = "/Library";
           podSpecMacro = {
