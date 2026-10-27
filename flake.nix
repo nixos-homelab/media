@@ -5,7 +5,12 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     flake-parts.url = "github:hercules-ci/flake-parts";
     kube-generators.url = "github:farcaller/nix-kube-generators";
-    docs.url = "github:andsens/nix-docs";
+    docs = {
+      url = "github:andsens/nix-docs";
+      inputs.systems.follows = "systems";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-parts.follows = "flake-parts";
+    };
     kubetree = {
       url = "github:andsens/nix-kubetree";
       inputs.nixpkgs.follows = "nixpkgs";
