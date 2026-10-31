@@ -77,13 +77,29 @@ in
             envByName.RADARR__APP__LAUNCHBROWSER = "false";
             envByName.RADARR__UPDATE__MECHANISM = "external";
             portsByName.web = 7878;
-            livenessProbe.httpGet = {
-              port = "web";
-              path = "/ping";
+            # It doesn't answer for seconds at a time while busy (RSS sync, imports), and the 1 s default timeout
+            # had it restarted many times a day
+            livenessProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
             };
-            readinessProbe.httpGet = {
-              port = "web";
-              path = "/ping";
+            readinessProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
+            };
+            startupProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
+              failureThreshold = 30;
             };
             volumeMountsByPath = {
               "/tmp" = "tmp";
