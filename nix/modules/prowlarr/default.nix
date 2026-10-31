@@ -76,13 +76,28 @@ in
             envByName.PROWLARR__APP__LAUNCHBROWSER = "false";
             envByName.PROWLARR__UPDATE__MECHANISM = "external";
             portsByName.web = 9696;
-            livenessProbe.httpGet = {
-              port = "web";
-              path = "/ping";
+            # It doesn't answer for seconds at a time while busy, and the 1 s default timeout had it restarted
+            livenessProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
             };
-            readinessProbe.httpGet = {
-              port = "web";
-              path = "/ping";
+            readinessProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
+            };
+            startupProbe = {
+              httpGet = {
+                port = "web";
+                path = "/ping";
+              };
+              timeoutSeconds = 10;
+              failureThreshold = 30;
             };
             volumeMountsByPath."/tmp" = "tmp";
           };
