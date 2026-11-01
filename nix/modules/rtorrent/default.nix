@@ -241,8 +241,9 @@ in
     systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent";
       wantedBy = [ "timers.target" ];
+      # The gateway's mappings last 60 s: renewed every 30 s, one failed round leaves no gap
       timerConfig = {
-        OnUnitActiveSec = "45";
+        OnUnitActiveSec = "30";
         AccuracySec = "1";
       };
     };
@@ -257,16 +258,42 @@ in
       wantedBy = [ "default.target" ];
       script = ''
         set -eo pipefail
-        natpmpcmd() { ${lib.getExe pkgs.libnatpmp} -g ${
+        # A deadline per try: natpmpc's own retries run for half a minute
+        natpmpcmd() { timeout 8 ${lib.getExe pkgs.libnatpmp} -g ${
           lib.maybeAttr "gatewayIP4" config.homelab.privacy-vpn.gatewayIP6 config.homelab.privacy-vpn
         } "$@" | tee >(cat >&2); }
+        # The gateway answers out of order or not at all now and then: each request gets its own tries, and prints the
+        # field asked for once it has it
+        request() {
+          local pattern=$1 field=$2 try out
+          shift 2
+          for try in 1 2 3; do
+            if out=$(natpmpcmd "$@") && out=$(grep -m1 "$pattern" <<<"$out"); then
+              cut -d ' ' -f "$field" <<<"$out"
+              return 0
+            fi
+            printf 'natpmpc %s: try %d failed\n' "$*" "$try" >&2
+            sleep 1
+          done
+          return 1
+        }
         main() {
-          local external_ip bittorrent_port dht_port overlay_dir
-          external_ip=$(natpmpcmd | grep 'Public IP address : ' | cut -d ' ' -f5)
-          bittorrent_port=$(natpmpcmd -a 0 ${builtins.toString bittorrentPort} tcp | grep 'Mapped public port' | cut -d ' ' -f4)
-          dht_port=$(natpmpcmd -a 0 ${builtins.toString dhtPort} udp | grep 'Mapped public port' | cut -d ' ' -f4)
+          local external_ip bittorrent_port dht_port overlay_dir tcp udp
+          # TCP and UDP are renewed apart, so one failing doesn't let the other lapse
+          tcp=$(mktemp) udp=$(mktemp)
+          trap 'rm -f "$tcp" "$udp"' EXIT
+          request 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp >"$tcp" &
+          request 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp >"$udp" &
+          external_ip=$(request 'Public IP address : ' 5) || true
+          wait
+          bittorrent_port=$(<"$tcp") dht_port=$(<"$udp")
+          if [[ -z $external_ip || -z $bittorrent_port || -z $dht_port ]]; then
+            printf 'Mappings incomplete (ip=%s tcp=%s udp=%s), rtorrent left as it is\n' \
+              "$external_ip" "$bittorrent_port" "$dht_port" >&2
+            exit 1
+          fi
           overlay_dir=$(mktemp -d --suffix -rtorrent-deployment)
-          trap "rm -rf \"$overlay_dir\"" EXIT
+          trap 'rm -rf "$overlay_dir" "$tcp" "$udp"' EXIT
 
           cp "${
             kubelib.toYAMLFile {
