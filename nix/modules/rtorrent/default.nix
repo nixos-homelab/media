@@ -280,9 +280,10 @@ in
         main() {
           local external_ip bittorrent_port dht_port overlay_dir
           # One after the other, the mappings first, each whatever the other did: the gateway refuses requests that
-          # come in at the same time
-          bittorrent_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp) || true
-          dht_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp) || true
+          # come in at the same time. As Proton documents it (UDP first, `1 0`, 60 s): the gateway hands out one port
+          # per client for both and forwards it unchanged, so the ports asked for don't matter
+          dht_port=$(request 'Mapped public port' 4 -a 1 0 udp 60) || true
+          bittorrent_port=$(request 'Mapped public port' 4 -a 1 0 tcp 60) || true
           external_ip=$(request 'Public IP address : ' 5) || true
           if [[ -z $external_ip || -z $bittorrent_port || -z $dht_port ]]; then
             printf 'Mappings incomplete (ip=%s tcp=%s udp=%s), rtorrent left as it is\n' \
