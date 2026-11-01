@@ -241,9 +241,8 @@ in
     systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent";
       wantedBy = [ "timers.target" ];
-      # The gateway's mappings last 60 s: renewed every 30 s, one failed round leaves no gap
       timerConfig = {
-        OnUnitActiveSec = "30";
+        OnUnitActiveSec = "45";
         AccuracySec = "1";
       };
     };
@@ -258,39 +257,27 @@ in
       wantedBy = [ "default.target" ];
       script = ''
         set -eo pipefail
-        # A deadline per try: natpmpc's own retries run for half a minute
-        natpmpcmd() { timeout 10 ${lib.getExe pkgs.libnatpmp} -g ${
-          lib.maybeAttr "gatewayIP4" config.homelab.privacy-vpn.gatewayIP6 config.homelab.privacy-vpn
-        } "$@" | tee >(cat >&2); }
-        # The gateway answers out of order or not at all now and then: each request gets its own tries, and prints the
-        # field asked for once it has it
-        request() {
-          local pattern=$1 field=$2 try out
+        # Prints field of the line matching pattern in natpmpc's output, and the whole output only when it fails
+        natpmpcmd() {
+          local pattern=$1 field=$2 out line
           shift 2
-          for try in 1 2 3; do
-            if out=$(natpmpcmd "$@") && out=$(grep -m1 "$pattern" <<<"$out"); then
-              cut -d ' ' -f "$field" <<<"$out"
-              return 0
-            fi
-            printf 'natpmpc %s: try %d failed\n' "$*" "$try" >&2
-            sleep 1
-          done
-          return 1
+          out=$(${lib.getExe pkgs.libnatpmp} -g ${
+            lib.maybeAttr "gatewayIP4" config.homelab.privacy-vpn.gatewayIP6 config.homelab.privacy-vpn
+          } "$@" 2>&1) || true
+          if ! line=$(grep -m1 "$pattern" <<<"$out"); then
+            printf 'natpmpc %s failed:\n%s\n' "$*" "$out" >&2
+            return 1
+          fi
+          cut -d ' ' -f "$field" <<<"$line"
         }
         main() {
           local external_ip bittorrent_port dht_port overlay_dir
-          # One after the other, the mappings first, each whatever the other did: the gateway refuses requests that
-          # come in at the same time. In Proton's order and lifetime (UDP first, 60 s), to our fixed local ports
-          dht_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp 60) || true
-          bittorrent_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp 60) || true
-          external_ip=$(request 'Public IP address : ' 5) || true
-          if [[ -z $external_ip || -z $bittorrent_port || -z $dht_port ]]; then
-            printf 'Mappings incomplete (ip=%s tcp=%s udp=%s), rtorrent left as it is\n' \
-              "$external_ip" "$bittorrent_port" "$dht_port" >&2
-            exit 1
-          fi
+          # As Proton documents it: UDP first, 60 s
+          dht_port=$(natpmpcmd 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp 60)
+          bittorrent_port=$(natpmpcmd 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp 60)
+          external_ip=$(natpmpcmd 'Public IP address : ' 5)
           overlay_dir=$(mktemp -d --suffix -rtorrent-deployment)
-          trap 'rm -rf "$overlay_dir"' EXIT
+          trap "rm -rf \"$overlay_dir\"" EXIT
 
           cp "${
             kubelib.toYAMLFile {
