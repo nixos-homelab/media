@@ -259,7 +259,7 @@ in
       script = ''
         set -eo pipefail
         # A deadline per try: natpmpc's own retries run for half a minute
-        natpmpcmd() { timeout 8 ${lib.getExe pkgs.libnatpmp} -g ${
+        natpmpcmd() { timeout 10 ${lib.getExe pkgs.libnatpmp} -g ${
           lib.maybeAttr "gatewayIP4" config.homelab.privacy-vpn.gatewayIP6 config.homelab.privacy-vpn
         } "$@" | tee >(cat >&2); }
         # The gateway answers out of order or not at all now and then: each request gets its own tries, and prints the
@@ -278,22 +278,19 @@ in
           return 1
         }
         main() {
-          local external_ip bittorrent_port dht_port overlay_dir tcp udp
-          # TCP and UDP are renewed apart, so one failing doesn't let the other lapse
-          tcp=$(mktemp) udp=$(mktemp)
-          trap 'rm -f "$tcp" "$udp"' EXIT
-          request 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp >"$tcp" &
-          request 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp >"$udp" &
+          local external_ip bittorrent_port dht_port overlay_dir
+          # One after the other, the mappings first, each whatever the other did: the gateway refuses requests that
+          # come in at the same time
+          bittorrent_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString bittorrentPort} tcp) || true
+          dht_port=$(request 'Mapped public port' 4 -a 0 ${builtins.toString dhtPort} udp) || true
           external_ip=$(request 'Public IP address : ' 5) || true
-          wait
-          bittorrent_port=$(<"$tcp") dht_port=$(<"$udp")
           if [[ -z $external_ip || -z $bittorrent_port || -z $dht_port ]]; then
             printf 'Mappings incomplete (ip=%s tcp=%s udp=%s), rtorrent left as it is\n' \
               "$external_ip" "$bittorrent_port" "$dht_port" >&2
             exit 1
           fi
           overlay_dir=$(mktemp -d --suffix -rtorrent-deployment)
-          trap 'rm -rf "$overlay_dir" "$tcp" "$udp"' EXIT
+          trap 'rm -rf "$overlay_dir"' EXIT
 
           cp "${
             kubelib.toYAMLFile {
