@@ -179,7 +179,12 @@ in
   };
   imports = [ inputs.homelab-networking.nixosModules.privacy-vpn ];
   config = lib.mkIf cfg.enable {
-    networking.firewall.allowedTCPPorts = [ bittorrentPort ];
+    # With the privacy VPN, peers come in through its port mapping
+    networking.firewall =
+      if config.homelab.privacy-vpn.enable then
+        { interfaces.privacy-vpn.allowedTCPPorts = [ bittorrentPort ]; }
+      else
+        { allowedTCPPorts = [ bittorrentPort ]; };
     services.k3s.images = [ image ];
     kubetree.resources.rtorrent-deployment.deployment = deployment;
     services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacy-vpn.enable;
