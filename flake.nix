@@ -80,6 +80,51 @@
         perSystem =
           { pkgs, system, ... }:
           {
+            checks.manifests =
+              let
+                nfs = path: {
+                  server = "nas.example.org";
+                  inherit path;
+                };
+              in
+              inputs.homelab-shared.lib.checks.manifests {
+                inherit pkgs;
+                modules = builtins.attrValues self.nixosModules ++ [
+                  {
+                    nixpkgs.config.allowUnfreePredicate =
+                      pkg:
+                      builtins.elem (inputs.nixpkgs.lib.getName pkg) [
+                        "plexmediaserver"
+                        "unrar"
+                      ];
+                    homelab = {
+                      flood.enable = true;
+                      plex = {
+                        enable = true;
+                        volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
+                      };
+                      prowlarr.enable = true;
+                      radarr = {
+                        enable = true;
+                        volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
+                      };
+                      rtorrent = {
+                        enable = true;
+                        downloadsVolume.nfs = nfs "/mnt/torrents";
+                      };
+                      sabnzbd = {
+                        enable = true;
+                        downloadsVolume.nfs = nfs "/mnt/usenet";
+                      };
+                      sonarr = {
+                        enable = true;
+                        volumes."/mnt/media/tvshows".nfs = nfs "/mnt/media/tvshows";
+                      };
+                      homepage.enable = true;
+                    };
+                  }
+                ];
+              };
             packages = {
               lib-docs = inputs.docs.lib.docs.lib {
                 inherit pkgs;

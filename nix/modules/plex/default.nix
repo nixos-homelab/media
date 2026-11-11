@@ -137,7 +137,12 @@ in
                 "01" = "v6only";
                 "11" = "dualstack";
               }
-              ."${builtins.toString ccfg.enableIPv4}${builtins.toString ccfg.enableIPv6}";
+              .${
+                lib.concatMapStrings (on: if on then "1" else "0") [
+                  ccfg.enableIPv4
+                  ccfg.enableIPv6
+                ]
+              };
             secureConnections = "1"; # "Preferred", needed for Arr stack connectivity
             DisableTLSv1_0 = "1";
             customConnections = "https://${domain}:443/";
