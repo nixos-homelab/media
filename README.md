@@ -4,7 +4,7 @@ A self-hosted media stack on top of [nixos-homelab](https://github.com/nixos-hom
 Plex plus the usual *Arr suite for automated acquisition, wired together
 with API keys and download-client registrations handled automatically.
 
-For the full list of module options, see [docs/options.md](docs/options.md).
+For the full list of module options, see [the options reference](https://nixos-homelab.github.io/media/options/).
 
 ## Setup
 
