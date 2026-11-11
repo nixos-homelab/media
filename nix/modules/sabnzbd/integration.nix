@@ -48,7 +48,12 @@ let
               fields.category = "movies";
             } cfg.integrations.radarr.settings;
           };
-          prowlarr.apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+          prowlarr = {
+            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+            settings = lib.recursiveUpdate {
+              fields.category = "prowlarr";
+            } cfg.integrations.prowlarr.settings;
+          };
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
@@ -116,8 +121,19 @@ in
           kind = "ScriptMacro";
           metadata.namespace = "sabnzbd";
           metadata.name = "integrate-${spec.name}";
-          spec.allowEgress = [ spec.name ];
-          spec.script = self.lib.integration.mkArrStackIntegrationScript spec;
+          spec.allowEgress = [
+            spec.name
+            "sabnzbd"
+          ];
+          # The client refuses a category SABnzbd doesn't have, and a new SABnzbd has none of these. set_config
+          # creates it, or leaves an existing one as it is
+          spec.script = ''
+            curl -sf "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sabnzbd.workload}/api?mode=set_config&section=categories&name=${spec.settings.fields.category}&output=json&apikey=''${SABNZBD_API_KEY:?}" >/dev/null || {
+              echo "Creating the SABnzbd category ${spec.settings.fields.category} failed" >&2
+              exit 1
+            }
+          ''
+          + self.lib.integration.mkArrStackIntegrationScript spec;
           spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
         };
       }) integrations
