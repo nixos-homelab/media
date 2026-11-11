@@ -2,7 +2,7 @@
   description = "NixOS Homelab Media Workloads";
   inputs = {
     systems.url = "github:nix-systems/default-linux";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
     kube-generators.url = "github:farcaller/nix-kube-generators";
     docs = {
