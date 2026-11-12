@@ -10,10 +10,16 @@ let
   cfg = config.homelab.sabnzbd;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  # Without notify2 (desktop notifications, optional in sabnzbd), which drags in dbus, glib and their -dev outputs
+  sabnzbd = pkgs.sabnzbd.override {
+    python3 = pkgs.python3 // {
+      withPackages = f: pkgs.python3.withPackages (ps: lib.remove ps.notify2 (f ps));
+    };
+  };
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sabnzbd";
     copyToRoot = [
-      pkgs.sabnzbd
+      sabnzbd
       pkgs.cacert
       pkgs.coreutils
       pkgs.gnugrep
@@ -30,7 +36,7 @@ let
     #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} sabnzbd
     #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
     # '';
-    config.Entrypoint = [ (pkgs.lib.getExe pkgs.sabnzbd) ];
+    config.Entrypoint = [ (lib.getExe sabnzbd) ];
   };
 in
 {

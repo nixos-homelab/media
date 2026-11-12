@@ -8,15 +8,21 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.flood;
+  # dist/ is a self-contained bundle; node_modules holds only devDependencies
+  flood = pkgs.flood.overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      rm -r $out/lib/node_modules/flood/node_modules
+    '';
+  });
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/flood";
     copyToRoot = [
-      pkgs.flood
+      flood
       pkgs.mediainfo
     ]
     ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Entrypoint = [
-      (pkgs.lib.getExe pkgs.flood)
+      (lib.getExe flood)
     ];
   };
 in
