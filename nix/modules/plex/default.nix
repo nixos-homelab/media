@@ -206,23 +206,6 @@ in
           ipFamilyPolicy = "RequireDualStack";
         });
       };
-      internal-service = {
-        apiVersion = "cluster.local";
-        kind = "ServiceMacro";
-        metadata = {
-          namespace = "plex";
-          name = "plex";
-          labels."app.kubernetes.io/name" = "plex";
-        };
-        spec = {
-          selector."app.kubernetes.io/name" = "plex";
-          ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
-          portsByName.web = 32400;
-        }
-        // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
-          ipFamilyPolicy = "RequireDualStack";
-        });
-      };
       workload = {
         apiVersion = "cluster.local";
         kind = "WorkloadMacro";
@@ -231,6 +214,12 @@ in
           allowIngress = cfg.allowIngress;
           allowEgress = [ "internet" ];
           dataPath = "/Library";
+          service.spec = {
+            ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
+          }
+          // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
+            ipFamilyPolicy = "RequireDualStack";
+          });
           podSpecMacro = {
             initContainersByName.rm-lock = {
               image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
