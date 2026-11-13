@@ -27,8 +27,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} plex
-      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g plex -d / plex
+      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} plex
+      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g plex -d / plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';

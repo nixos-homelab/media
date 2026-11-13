@@ -33,8 +33,8 @@ let
     # runAsRoot = ''
     #   #!${pkgs.runtimeShell}
     #   ${pkgs.dockerTools.shadowSetup}
-    #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsUser} sabnzbd
-    #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsGroup} -g sabnzbd -d /data sabnzbd
+    #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} sabnzbd
+    #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g sabnzbd -d /data sabnzbd
     # '';
     config.Entrypoint = [ (lib.getExe sabnzbd) ];
   };
