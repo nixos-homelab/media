@@ -51,31 +51,30 @@ in
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.prowlarr.workload = {
-      apiVersion = "cluster.local";
-      kind = "WorkloadMacro";
-      metadata.name = "prowlarr";
-      spec = {
-        allowEgress = [
-          "internet"
-          "sonarr"
-          "radarr"
-          "flood"
-          "sabnzbd"
-        ];
-        ingressPort = 9696;
-        dataPath = "/data";
-        podSpecMacro = {
-          mainContainer = {
+    homelab.kubernetes.submodules.instances.prowlarr = {
+      submodule = "manifest";
+      config.submodules.instances.prowlarr = {
+        submodule = "workload";
+        args = {
+          allowEgress = [
+            "internet"
+            "sonarr"
+            "radarr"
+            "flood"
+            "sabnzbd"
+          ];
+          ingressPort = 9696;
+          dataPath = "/data";
+          ports.web = 9696;
+          container = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [ "-data=/data" ];
             workingDir = "/data";
-            envByName.PROWLARR__AUTH__ENABLED = "false";
-            envByName.PROWLARR__AUTH__METHOD = "External";
-            envByName.PROWLARR__APP__LAUNCHBROWSER = "false";
-            envByName.PROWLARR__UPDATE__MECHANISM = "external";
-            portsByName.web = 9696;
+            env.PROWLARR__AUTH__ENABLED.value = "false";
+            env.PROWLARR__AUTH__METHOD.value = "External";
+            env.PROWLARR__APP__LAUNCHBROWSER.value = "false";
+            env.PROWLARR__UPDATE__MECHANISM.value = "external";
             # It doesn't answer for seconds at a time while busy, and the 1 s default timeout had it restarted
             livenessProbe = {
               httpGet = {
@@ -99,10 +98,10 @@ in
               timeoutSeconds = 10;
               failureThreshold = 30;
             };
-            volumeMountsByPath."/tmp" = "tmp";
+            volumeMounts."/tmp".name = "tmp";
           };
-          volumesByName.tmp.emptyDir = { };
         };
+        config.kubernetes.resources.deployments.prowlarr.spec.template.spec.volumes.tmp.emptyDir = { };
       };
     };
   };

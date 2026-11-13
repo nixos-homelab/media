@@ -42,7 +42,7 @@ in
         widgets = [
           {
             type = "prowlarr";
-            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
+            url = "http://prowlarr.prowlarr:9696";
             key = "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}";
           }
         ];

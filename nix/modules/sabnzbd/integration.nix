@@ -30,26 +30,29 @@ let
             supportsCategories = true;
             removeCompletedDownloads = true;
             removeFailedDownloads = true;
-            fields = hllib.workload-macros.workloadServiceHostPort config.kubetree.resources.sabnzbd.workload;
+            fields = {
+              host = "sabnzbd.sabnzbd";
+              port = "8080";
+            };
           };
         } spec
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
           sonarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "http://sonarr.sonarr:8989/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
               fields.category = "tv";
             } cfg.integrations.sonarr.settings;
           };
           radarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "http://radarr.radarr:7878/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
               fields.category = "movies";
             } cfg.integrations.radarr.settings;
           };
           prowlarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+            apiEndpoint = "http://prowlarr.prowlarr:9696/api/v1/downloadclient";
             settings = lib.recursiveUpdate {
               fields.category = "prowlarr";
             } cfg.integrations.prowlarr.settings;
@@ -114,29 +117,32 @@ in
         '';
       }
     ];
-    kubetree.resources.sabnzbd = lib.mergeAttrsList (
-      map (spec: {
-        "${spec.name}-integration" = {
-          apiVersion = "cluster.local";
-          kind = "ScriptMacro";
-          metadata.namespace = "sabnzbd";
-          metadata.name = "integrate-${spec.name}";
-          spec.allowEgress = [
-            spec.name
-            "sabnzbd"
-          ];
-          # The client refuses a category SABnzbd doesn't have, and a new SABnzbd has none of these. set_config
-          # creates it, or leaves an existing one as it is
-          spec.script = ''
-            curl -sf "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sabnzbd.workload}/api?mode=set_config&section=categories&name=${spec.settings.fields.category}&output=json&apikey=''${SABNZBD_API_KEY:?}" >/dev/null || {
-              echo "Creating the SABnzbd category ${spec.settings.fields.category} failed" >&2
-              exit 1
-            }
-          ''
-          + self.lib.integration.mkArrStackIntegrationScript spec;
-          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
-        };
-      }) integrations
-    );
+    # In the manifest of sabnzbd, as before
+    homelab.kubernetes = lib.mkIf (integrations != [ ]) {
+      submodules.instances.sabnzbd.config.submodules.instances = lib.listToAttrs (
+        map (spec: {
+          name = "integrate-${spec.name}";
+          value = {
+            submodule = "script";
+            args = {
+              # The client refuses a category SABnzbd doesn't have, and a new SABnzbd has none of these. set_config
+              # creates it, or leaves an existing one as it is
+              script = ''
+                curl -sf "http://sabnzbd.sabnzbd:8080/api?mode=set_config&section=categories&name=${spec.settings.fields.category}&output=json&apikey=''${SABNZBD_API_KEY:?}" >/dev/null || {
+                  echo "Creating the SABnzbd category ${spec.settings.fields.category} failed" >&2
+                  exit 1
+                }
+              ''
+              + self.lib.integration.mkArrStackIntegrationScript spec;
+              allowEgress = [
+                spec.name
+                "sabnzbd"
+              ];
+              container.envFrom = [ { secretRef.name = "api-keys"; } ];
+            };
+          };
+        }) integrations
+      );
+    };
   };
 }

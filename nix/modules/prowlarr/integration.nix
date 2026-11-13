@@ -18,13 +18,13 @@ let
           authApiKeyVar = "PROWLARR_API_KEY";
           apiKeyFieldName = "apiKey";
           apiKeyVar = toApiKeyVar name;
-          apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/applications";
+          apiEndpoint = "http://prowlarr.prowlarr:9696/api/v1/applications";
           settings = {
             enable = true;
             syncLevel = "fullSync";
             fields = {
-              prowlarrUrl = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload;
-              baseUrl = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.${name}.workload;
+              prowlarrUrl = "http://prowlarr.prowlarr:9696";
+              baseUrl = serviceUrls.${name};
             };
           };
         } spec
@@ -46,6 +46,10 @@ let
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
+  serviceUrls = {
+    sonarr = "http://sonarr.sonarr:8989";
+    radarr = "http://radarr.radarr:7878";
+  };
 in
 {
   options.homelab.prowlarr.integrations = {
@@ -90,18 +94,21 @@ in
         '';
       }
     ];
-    kubetree.resources.prowlarr = lib.mergeAttrsList (
-      map (spec: {
-        "${spec.name}-integration" = {
-          apiVersion = "cluster.local";
-          kind = "ScriptMacro";
-          metadata.namespace = "prowlarr";
-          metadata.name = "integrate-${spec.name}";
-          spec.allowEgress = [ "prowlarr" ];
-          spec.script = self.lib.integration.mkArrStackIntegrationScript spec;
-          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
-        };
-      }) integrations
-    );
+    # In the manifest of prowlarr, as before
+    homelab.kubernetes = lib.mkIf (integrations != [ ]) {
+      submodules.instances.prowlarr.config.submodules.instances = lib.listToAttrs (
+        map (spec: {
+          name = "integrate-${spec.name}";
+          value = {
+            submodule = "script";
+            args = {
+              script = self.lib.integration.mkArrStackIntegrationScript spec;
+              allowEgress = [ "prowlarr" ];
+              container.envFrom = [ { secretRef.name = "api-keys"; } ];
+            };
+          };
+        }) integrations
+      );
+    };
   };
 }

@@ -32,22 +32,25 @@ let
               tags = [ name ];
               destination = "/torrents/";
             }
-            // hllib.workload-macros.workloadServiceHostPort config.kubetree.resources.flood.workload;
+            // {
+              host = "flood.flood";
+              port = "3000";
+            };
           };
         } spec
       )
       (
         lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
           sonarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sonarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "http://sonarr.sonarr:8989/api/v3/downloadclient";
             settings = cfg.integrations.sonarr.settings;
           };
           radarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.radarr.workload}/api/v3/downloadclient";
+            apiEndpoint = "http://radarr.radarr:7878/api/v3/downloadclient";
             settings = cfg.integrations.radarr.settings;
           };
           prowlarr = {
-            apiEndpoint = "${hllib.workload-macros.workloadServiceUrl config.kubetree.resources.prowlarr.workload}/api/v1/downloadclient";
+            apiEndpoint = "http://prowlarr.prowlarr:9696/api/v1/downloadclient";
             settings = cfg.integrations.prowlarr.settings;
           };
         }
@@ -109,18 +112,21 @@ in
         '';
       }
     ];
-    kubetree.resources.flood = lib.mergeAttrsList (
-      map (spec: {
-        "${spec.name}-integration" = {
-          apiVersion = "cluster.local";
-          kind = "ScriptMacro";
-          metadata.namespace = "flood";
-          metadata.name = "integrate-${spec.name}";
-          spec.allowEgress = [ spec.name ];
-          spec.script = self.lib.integration.mkArrStackIntegrationScript spec;
-          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
-        };
-      }) integrations
-    );
+    # In the manifest of flood, as before
+    homelab.kubernetes = lib.mkIf (integrations != [ ]) {
+      submodules.instances.flood.config.submodules.instances = lib.listToAttrs (
+        map (spec: {
+          name = "integrate-${spec.name}";
+          value = {
+            submodule = "script";
+            args = {
+              script = self.lib.integration.mkArrStackIntegrationScript spec;
+              allowEgress = [ spec.name ];
+              container.envFrom = [ { secretRef.name = "api-keys"; } ];
+            };
+          };
+        }) integrations
+      );
+    };
   };
 }

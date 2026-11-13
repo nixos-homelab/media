@@ -66,41 +66,16 @@ in
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.sabnzbd.workload = {
-      apiVersion = "cluster.local";
-      kind = "WorkloadMacro";
-      metadata.name = "sabnzbd";
-      spec = {
-        allowEgress = [ "internet" ];
-        template.metadata.labels = lib.optionalAttrs (config.homelab.privacy-vpn.enable) {
-          "cluster.local/egress-gateway" = "privacy-vpn";
-        };
-        ingressPort = 8080;
-        dataPath = "/data";
-        podSpecMacro = {
-          name = "sabnzbd";
-          initContainersByName.setup-config = {
-            image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
-            imagePullPolicy = "Never";
-            args = [
-              ''
-                [[ -f "/data/sabnzbd.ini" ]] || cat >"/data/sabnzbd.ini" <<'EOF'
-                [misc]
-                host = 0.0.0.0
-                port = 8080
-                host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
-                download_dir = /usenet/incomplete
-                complete_dir = /usenet/complete
-                schedlines = "1 0 21 7 create_backup ",
-                backup_dir = "/data/backups"
-                permissions = 775
-                EOF
-              ''
-            ];
-            securityContext.readOnlyRootFilesystem = true;
-            volumeMountsByPath."/data" = "data";
-          };
-          mainContainer = {
+    homelab.kubernetes.submodules.instances.sabnzbd = {
+      submodule = "manifest";
+      config.submodules.instances.sabnzbd = {
+        submodule = "workload";
+        args = {
+          allowEgress = [ "internet" ];
+          ingressPort = 8080;
+          dataPath = "/data";
+          ports.web = 8080;
+          container = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
             args = [
@@ -110,17 +85,44 @@ in
               "/data/sabnzbd.ini"
             ];
             workingDir = "/data";
-            portsByName.web = 8080;
             livenessProbe.httpGet.port = "web";
             readinessProbe.httpGet.port = "web";
-            volumeMountsByPath = {
-              "/usenet" = "downloads";
-              "/tmp" = "tmp";
+            volumeMounts = {
+              "/usenet".name = "downloads";
+              "/tmp".name = "tmp";
             };
           };
-          volumesByName = {
-            downloads = cfg.downloadsVolume;
-            tmp.emptyDir = { };
+        };
+        config.kubernetes.resources.deployments.sabnzbd.spec.template = {
+          metadata.labels = lib.optionalAttrs config.homelab.privacy-vpn.enable {
+            "cluster.local/egress-gateway" = "privacy-vpn";
+          };
+          spec = {
+            initContainers.setup-config = {
+              image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
+              imagePullPolicy = "Never";
+              args = [
+                ''
+                  [[ -f "/data/sabnzbd.ini" ]] || cat >"/data/sabnzbd.ini" <<'EOF'
+                  [misc]
+                  host = 0.0.0.0
+                  port = 8080
+                  host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
+                  download_dir = /usenet/incomplete
+                  complete_dir = /usenet/complete
+                  schedlines = "1 0 21 7 create_backup ",
+                  backup_dir = "/data/backups"
+                  permissions = 775
+                  EOF
+                ''
+              ];
+              securityContext.readOnlyRootFilesystem = true;
+              volumeMounts."/data".name = "data";
+            };
+            volumes = {
+              downloads = cfg.downloadsVolume;
+              tmp.emptyDir = { };
+            };
           };
         };
       };

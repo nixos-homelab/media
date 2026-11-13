@@ -49,13 +49,13 @@ rec {
     ```nix
     integration.mkArrStackIntegrationScript {
       name = "Sonarr";
-      apiEndpoint = "${integration.workloadServiceUrl prowlarrWorkload}/api/v1/applications";
+      apiEndpoint = "http://prowlarr.prowlarr:9696/api/v1/applications";
       authApiKeyVar = "PROWLARR_API_KEY";
       apiKeyFieldName = "apiKey";
       apiKeyVar = "SONARR_API_KEY";
       settings = {
         implementation = "Sonarr";
-        fields.baseUrl = integration.workloadServiceUrl sonarrWorkload;
+        fields.baseUrl = "http://sonarr.sonarr:8989";
       };
     }
     ```

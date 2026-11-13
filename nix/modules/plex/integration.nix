@@ -18,24 +18,18 @@ let
           authApiKeyVar = toApiKeyVar name;
           apiKeyFieldName = "authToken";
           apiKeyVar = "PLEX_API_KEY";
-          apiEndpoint = "${
-            hllib.workload-macros.workloadServiceUrl config.kubetree.resources.${name}.workload
-          }/api/v3/notification";
+          apiEndpoint = "${serviceUrls.${name}}/api/v3/notification";
           settings = {
             name = "Plex Media Server";
             enable = true;
             implementation = "PlexServer";
             implementationName = "Plex Media Server";
             configContract = "PlexServerSettings";
-            fields =
-              let
-                metadata = config.kubetree.resources.plex.workload.metadata;
-              in
-              {
-                host = "${metadata.name}.${lib.attrByPath [ "namespace" ] metadata.name metadata}";
-                port = config.kubetree.resources.plex.workload.spec.podSpecMacro.mainContainer.portsByName.web;
-                updateLibrary = true;
-              };
+            fields = {
+              host = "plex.plex";
+              port = 32400;
+              updateLibrary = true;
+            };
           };
         } spec
       )
@@ -52,6 +46,10 @@ let
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
+  serviceUrls = {
+    sonarr = "http://sonarr.sonarr:8989";
+    radarr = "http://radarr.radarr:7878";
+  };
 in
 {
   options.homelab.plex.integrations = {
@@ -98,18 +96,21 @@ in
         '';
       }
     ];
-    kubetree.resources.plex = lib.mergeAttrsList (
-      map (spec: {
-        "${spec.name}-integration" = {
-          apiVersion = "cluster.local";
-          kind = "ScriptMacro";
-          metadata.namespace = "plex";
-          metadata.name = "integrate-${spec.name}";
-          spec.allowEgress = [ spec.name ];
-          spec.script = self.lib.integration.mkArrStackIntegrationScript spec;
-          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "api-keys"; } ];
-        };
-      }) integrations
-    );
+    # In the manifest of plex, as before
+    homelab.kubernetes = lib.mkIf (integrations != [ ]) {
+      submodules.instances.plex.config.submodules.instances = lib.listToAttrs (
+        map (spec: {
+          name = "integrate-${spec.name}";
+          value = {
+            submodule = "script";
+            args = {
+              script = self.lib.integration.mkArrStackIntegrationScript spec;
+              allowEgress = [ spec.name ];
+              container.envFrom = [ { secretRef.name = "api-keys"; } ];
+            };
+          };
+        }) integrations
+      );
+    };
   };
 }

@@ -6,7 +6,6 @@
   ...
 }:
 let
-  hllib = inputs.homelab-shared.lib;
   ccfg = config.homelab.cluster;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   cfg = config.homelab.rtorrent;
@@ -65,108 +64,6 @@ let
     ];
     config.Entrypoint = [ (pkgs.lib.getExe wrapper) ];
   };
-  deployment = {
-    apiVersion = "cluster.local";
-    kind = "DeploymentMacro";
-    metadata.name = "rtorrent";
-    spec = {
-      allowEgress = [ "internet" ];
-      template.metadata.labels = lib.optionalAttrs (config.homelab.privacy-vpn.enable) {
-        "cluster.local/egress-gateway" = "privacy-vpn";
-      };
-      podSpecMacro = {
-        terminationGracePeriodSeconds = 10;
-        initContainersByName.rm-locks = {
-          image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
-          imagePullPolicy = "Never";
-          args = [
-            ''rm -f "/data/rtorrent.pid" "/data/rtorrent.lock"''
-          ];
-          securityContext.readOnlyRootFilesystem = true;
-          volumeMountsByPath."/data" = "data";
-        };
-        mainContainer = {
-          image = "${image.buildArgs.name}:${image.imageTag}";
-          imagePullPolicy = "Never";
-          args = [
-            "-n"
-            "-d"
-            "/torrents"
-            "-s"
-            "/data"
-            "-p"
-            "$(BITTORRENT_PORT)-$(BITTORRENT_PORT)"
-            "-o"
-            "dht.port.set=$(DHT_PORT)"
-            "-o"
-            "try_import=/etc/rtorrent.rc"
-          ];
-          livenessProbe.tcpSocket.port = "rpc";
-          readinessProbe.tcpSocket.port = "rpc";
-          # Not using createServicePod env arg, the ordering is significant when patching the deployment
-          env = [
-            {
-              name = "EXTERNAL_IP";
-              value = "0.0.0.0";
-            }
-            {
-              name = "BITTORRENT_PORT";
-              value = builtins.toString bittorrentPort;
-            }
-            {
-              name = "DHT_PORT";
-              value = builtins.toString dhtPort;
-            }
-          ];
-          ports = [
-            {
-              name = "rpc";
-              containerPort = 5000;
-            }
-            (
-              {
-                name = "bittorrent";
-                protocol = "TCP";
-                containerPort = bittorrentPort;
-              }
-              // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
-                hostPort = bittorrentPort;
-                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
-              })
-            )
-            (
-              {
-                name = "dht";
-                protocol = "UDP";
-                containerPort = dhtPort;
-              }
-              // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
-                hostPort = dhtPort;
-                hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
-              })
-            )
-          ];
-          volumeMountsByPath = {
-            "/data" = "data";
-            "/torrents" = "downloads";
-            "/etc/rtorrent.rc" = {
-              name = "config";
-              subPath = "rtorrent.rc";
-            };
-            "/var/log" = "log";
-            "/var/run" = "run";
-          };
-        };
-        volumesByName = {
-          data.persistentVolumeClaim.claimName = "rtorrent";
-          downloads = cfg.downloadsVolume;
-          config.configMap.name = "rtorrent";
-          log.emptyDir = { };
-          run.emptyDir = { };
-        };
-      };
-    };
-  };
 in
 {
   options.homelab.rtorrent = {
@@ -186,62 +83,204 @@ in
       else
         { allowedTCPPorts = [ bittorrentPort ]; };
     services.k3s.images = [ image ];
-    kubetree.resources.rtorrent-deployment.deployment = deployment;
     services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacy-vpn.enable;
-    kubetree.resources.rtorrent = {
-      world-to-rtorrent = {
-        apiVersion = "cilium.io/v2";
-        kind = "CiliumNetworkPolicy";
-        metadata = {
-          namespace = "rtorrent";
-          name = "world-to-rtorrent";
-          labels."app.kubernetes.io/name" = "rtorrent";
+    homelab.kubernetes.submodules.instances =
+      let
+        labels."app.kubernetes.io/name" = "rtorrent";
+        toPorts = inputs.homelab-networking.lib.toPorts;
+      in
+      {
+        # k3s applies it without the privacy VPN; with it, portmap-rtorrent does, with the ports the VPN maps
+        rtorrent-deployment = {
+          name = "rtorrent";
+          submodule = "deployment";
+          args = {
+            allowEgress = [ "internet" ];
+            container = {
+              image = "${image.buildArgs.name}:${image.imageTag}";
+              imagePullPolicy = "Never";
+              args = [
+                "-n"
+                "-d"
+                "/torrents"
+                "-s"
+                "/data"
+                "-p"
+                "$(BITTORRENT_PORT)-$(BITTORRENT_PORT)"
+                "-o"
+                "dht.port.set=$(DHT_PORT)"
+                "-o"
+                "try_import=/etc/rtorrent.rc"
+              ];
+              livenessProbe.tcpSocket.port = "rpc";
+              readinessProbe.tcpSocket.port = "rpc";
+              # Lists, not the `ports` arg: portmap-rtorrent patches them by index. No `ports` also means no
+              # policies here; the rtorrent manifest has them
+              env = [
+                {
+                  name = "EXTERNAL_IP";
+                  value = "0.0.0.0";
+                }
+                {
+                  name = "BITTORRENT_PORT";
+                  value = toString bittorrentPort;
+                }
+                {
+                  name = "DHT_PORT";
+                  value = toString dhtPort;
+                }
+              ];
+              ports = [
+                {
+                  name = "rpc";
+                  containerPort = 5000;
+                }
+                (
+                  {
+                    name = "bittorrent";
+                    protocol = "TCP";
+                    containerPort = bittorrentPort;
+                  }
+                  // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
+                    hostPort = bittorrentPort;
+                    hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
+                  })
+                )
+                (
+                  {
+                    name = "dht";
+                    protocol = "UDP";
+                    containerPort = dhtPort;
+                  }
+                  // (lib.optionalAttrs config.homelab.privacy-vpn.enable {
+                    hostPort = dhtPort;
+                    hostIP = lib.maybeAttr "clientIP4" config.homelab.privacy-vpn.clientIP6 config.homelab.privacy-vpn;
+                  })
+                )
+              ];
+              volumeMounts = {
+                "/data".name = "data";
+                "/torrents".name = "downloads";
+                "/etc/rtorrent.rc" = {
+                  name = "config";
+                  subPath = "rtorrent.rc";
+                };
+                "/var/log".name = "log";
+                "/var/run".name = "run";
+              };
+            };
+          };
+          config.kubernetes.resources.deployments.rtorrent.spec.template = {
+            metadata.labels = lib.optionalAttrs config.homelab.privacy-vpn.enable {
+              "cluster.local/egress-gateway" = "privacy-vpn";
+            };
+            spec = {
+              terminationGracePeriodSeconds = 10;
+              initContainers.rm-locks = {
+                image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
+                imagePullPolicy = "Never";
+                args = [
+                  ''rm -f "/data/rtorrent.pid" "/data/rtorrent.lock"''
+                ];
+                securityContext.readOnlyRootFilesystem = true;
+                volumeMounts."/data".name = "data";
+              };
+              volumes = {
+                data.persistentVolumeClaim.claimName = "rtorrent";
+                downloads = cfg.downloadsVolume;
+                config.configMap.name = "rtorrent";
+                log.emptyDir = { };
+                run.emptyDir = { };
+              };
+            };
+          };
         };
-        spec.endpointSelector.matchLabels."app.kubernetes.io/name" = "rtorrent";
-        spec.ingress = [
-          {
-            fromEntities = [ "world" ];
-            toPortsFlattened = [
-              {
-                port = "5001";
-                endPort = 65535;
-              }
-            ];
-          }
-        ];
-      };
-      config = {
-        apiVersion = "v1";
-        kind = "ConfigMap";
-        metadata.name = "rtorrent";
-        metadata.namespace = "rtorrent";
-        data."rtorrent.rc" = builtins.readFile ./rtorrent.rc;
-      };
-      namespace = (hllib.k8s.createNamespace { namespace = "rtorrent"; });
-      data = {
-        apiVersion = "v1";
-        kind = "PersistentVolumeClaim";
-        metadata.namespace = "rtorrent";
-        metadata.name = "rtorrent";
-        spec = {
-          accessModes = [ "ReadWriteOnce" ];
-          resources.requests.storage = "1Gi";
-          volumeMode = "Filesystem";
+        rtorrent = {
+          submodule = "manifest";
+          config = {
+            kubernetes.resources = {
+              # Cluster-scoped: no namespace, which kubenix gives every object by default
+              namespaces.rtorrent.metadata.namespace = null;
+              configMaps.rtorrent.data."rtorrent.rc" = builtins.readFile ./rtorrent.rc;
+              persistentVolumeClaims.rtorrent.spec = {
+                accessModes = [ "ReadWriteOnce" ];
+                resources.requests.storage = "1Gi";
+                volumeMode = "Filesystem";
+              };
+              ciliumNetworkPolicies.world-to-rtorrent = {
+                metadata = { inherit labels; };
+                spec = {
+                  endpointSelector.matchLabels = labels;
+                  ingress = [
+                    {
+                      fromEntities = [ "world" ];
+                      toPorts = toPorts [
+                        {
+                          port = 5001;
+                          endPort = 65535;
+                        }
+                      ];
+                    }
+                  ];
+                };
+              };
+              # The pair of policies a pod-running submodule gets from `policyPorts`, by hand, since the pods are
+              # in the rtorrent-deployment manifest: pods labeled `cluster.local/rtorrent-egress: allow` may reach 5000
+              ciliumClusterwideNetworkPolicies.pod-to-rtorrent = {
+                metadata = {
+                  inherit labels;
+                  namespace = null;
+                };
+                spec = {
+                  endpointSelector.matchLabels."cluster.local/rtorrent-egress" = "allow";
+                  egress = [
+                    {
+                      toEndpoints = [
+                        {
+                          matchLabels = labels // {
+                            "k8s:io.kubernetes.pod.namespace" = "rtorrent";
+                          };
+                        }
+                      ];
+                      toPorts = toPorts [ 5000 ];
+                    }
+                  ];
+                };
+              };
+              ciliumNetworkPolicies.rtorrent-from-pod = {
+                metadata = { inherit labels; };
+                spec = {
+                  endpointSelector.matchLabels = labels;
+                  ingress = [
+                    {
+                      fromEndpoints = [
+                        {
+                          matchExpressions = [
+                            {
+                              key = "k8s:io.kubernetes.pod.namespace";
+                              operator = "Exists";
+                            }
+                            {
+                              key = "cluster.local/rtorrent-egress";
+                              operator = "In";
+                              values = [ "allow" ];
+                            }
+                          ];
+                        }
+                      ];
+                      toPorts = toPorts [ 5000 ];
+                    }
+                  ];
+                };
+              };
+            };
+            submodules.instances.rtorrent = {
+              submodule = "service";
+              args.ports.scgi = 5000;
+            };
+          };
         };
       };
-      service = {
-        apiVersion = "cluster.local";
-        kind = "ServiceMacro";
-        metadata.name = "rtorrent";
-        spec.portsByName.scgi = 5000;
-      };
-      netpols = {
-        apiVersion = "cluster.local";
-        kind = "NetpolMacro";
-        metadata.name = "rtorrent";
-        spec.ports = [ 5000 ];
-      };
-    };
 
     systemd.timers."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent";
@@ -298,7 +337,13 @@ in
               ];
             }
           }" "$overlay_dir/kustomization.yaml"
-          cp "${kubelib.toYAMLFile (inputs.kubetree.lib.transform.transformResource config.kubetree deployment)}" "$overlay_dir/rtorrent.yaml"
+          cp "${
+            kubelib.toYAMLFile (
+              lib.findSingle (
+                o: o.kind == "Deployment"
+              ) null null config.services.k3s.manifests.rtorrent-deployment.content
+            )
+          }" "$overlay_dir/rtorrent.yaml"
           cat >"$overlay_dir/ports.yaml" <<EOF
         - op: replace
           path: /spec/template/spec/containers/0/env/0/value

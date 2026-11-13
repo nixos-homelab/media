@@ -95,180 +95,168 @@ in
         '';
       }
     ];
-    kubetree.resources.plex = {
-      certificate = {
-        apiVersion = "cert-manager.io/v1";
-        kind = "Certificate";
-        metadata = {
-          namespace = "plex";
-          name = "plex";
-          labels."app.kubernetes.io/name" = "plex";
-        };
-        spec = {
-          secretName = "plex-tls";
-          commonName = "plex.${ccfg.domain}";
-          dnsNames = cfg.tlsDomains;
-          issuerRef = {
-            group = "cert-manager.io";
-            kind = "ClusterIssuer";
-            name = config.kubetree.workload-macros.acmeProvider;
-          };
-          keystores.pkcs12 = {
-            create = true;
-            password = "plex";
-            profile = "Modern2023";
-          };
-        };
-      };
-      configure-plex =
-        let
-          domain =
-            config.kubetree.resources.plex.external-service.metadata.annotations."external-dns.alpha.kubernetes.io/hostname";
-          workload = config.kubetree.resources.plex.workload;
-          host = "${workload.metadata.name}.${
-            lib.attrByPath [ "namespace" ] workload.metadata.name workload.metadata
-          }";
-          port = workload.spec.podSpecMacro.mainContainer.portsByName.web;
-          apiUrl = "https://${host}:${builtins.toString port}/:/prefs";
-          queryParams = {
-            IPNetworkType =
-              {
-                "10" = "v4only";
-                "01" = "v6only";
-                "11" = "dualstack";
-              }
-              .${
-                lib.concatMapStrings (on: if on then "1" else "0") [
-                  ccfg.enableIPv4
-                  ccfg.enableIPv6
-                ]
-              };
-            secureConnections = "1"; # "Preferred", needed for Arr stack connectivity
-            DisableTLSv1_0 = "1";
-            customConnections = "https://${domain}:443/";
-            customCertificatePath = "/tls/keystore.p12";
-            customCertificateKey = config.kubetree.resources.plex.certificate.spec.keystores.pkcs12.password;
-            customCertificateDomain = domain;
-          };
-          queryString = lib.join "&" (
-            lib.mapAttrsToList (name: value: "${name}=${lib.escapeURL value}") queryParams
-          );
-        in
-        {
-          apiVersion = "cluster.local";
-          kind = "ScriptMacro";
-          metadata.namespace = "plex";
-          metadata.name = "configure";
-          spec.allowEgress = [ "plex" ];
-          spec.script = ''
-            set -eo pipefail
-            echo "Configuring Plex" >&2
-            if curl --insecure -sfX PUT '${apiUrl}?${queryString}' \
-              -H "X-Plex-Token: ''${PLEX_API_KEY:?}"; then
-              echo "Successfully configured Plex" >&2
-            else
-              echo "Failed to configure Plex" >&2
-              exit 1
-            fi
-          '';
-          spec.podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "plex-api-key"; } ];
-        };
-      external-service = {
-        apiVersion = "cluster.local";
-        kind = "ServiceMacro";
-        metadata = {
-          namespace = "plex";
-          name = "plex-external";
-          labels."app.kubernetes.io/name" = "plex";
-          annotations = {
-            "external-dns.alpha.kubernetes.io/hostname" = "plex.${ccfg.domain}";
-          }
-          // lib.optionalAttrs (builtins.length cfg.reservedIPs > 0) ({
-            "lbipam.cilium.io/ips" = lib.join "," cfg.reservedIPs;
-          });
-        };
-        spec = {
-          type = "LoadBalancer";
-          selector."app.kubernetes.io/name" = "plex";
+    homelab.kubernetes.submodules.instances.plex =
+      let
+        domain = "plex.${ccfg.domain}";
+        keystorePassword = "plex";
+        labels."app.kubernetes.io/name" = "plex";
+        ipFamilies = {
           ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
-          portsByName = {
-            web = {
-              port = 443;
-              targetPort = 32400;
-            };
-            plex = {
-              port = 32400;
-              targetPort = 32400;
-            };
-          };
         }
         // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
           ipFamilyPolicy = "RequireDualStack";
         });
-      };
-      workload = {
-        apiVersion = "cluster.local";
-        kind = "WorkloadMacro";
-        metadata.name = "plex";
-        spec = {
-          allowIngress = cfg.allowIngress;
-          allowEgress = [ "internet" ];
-          dataPath = "/Library";
-          service.spec = {
-            ipFamilies = (lib.optional ccfg.enableIPv4 "IPv4") ++ (lib.optional ccfg.enableIPv6 "IPv6");
-          }
-          // (lib.optionalAttrs (ccfg.enableIPv4 && ccfg.enableIPv6) {
-            ipFamilyPolicy = "RequireDualStack";
-          });
-          podSpecMacro = {
-            initContainersByName.rm-lock = {
-              image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
-              imagePullPolicy = "Never";
-              args = [
-                ''rm -f "/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
-              ];
-              securityContext.readOnlyRootFilesystem = true;
-              volumeMountsByPath."/Library" = "data";
-            };
-            mainContainer = {
-              image = "${image.buildArgs.name}:${image.imageTag}";
-              imagePullPolicy = "Never";
-              portsByName.web = 32400;
-              livenessProbe.httpGet = {
-                scheme = "HTTPS";
-                port = "web";
-                path = "/identity";
-              };
-              readinessProbe.httpGet = {
-                scheme = "HTTPS";
-                port = "web";
-                path = "/identity";
-              };
-              volumeMountsByPath = {
-                "/tls" = "tls";
-                "/var/tmp" = "var-tmp";
-                "/tmp" = "tmp";
-              }
-              // lib.mapAttrs' (name: value: {
-                inherit name;
-                value = {
-                  name = (hllib.k8s.pathToMountName name);
-                  readOnly = true;
+      in
+      {
+        submodule = "manifest";
+        config = {
+          kubernetes.resources = {
+            certificates.plex = {
+              metadata = { inherit labels; };
+              spec = {
+                secretName = "plex-tls";
+                commonName = domain;
+                dnsNames = cfg.tlsDomains;
+                issuerRef = {
+                  group = "cert-manager.io";
+                  kind = "ClusterIssuer";
+                  name = config.kubetree.workload-macros.acmeProvider;
                 };
-              }) cfg.volumes;
+                keystores.pkcs12 = {
+                  create = true;
+                  password = keystorePassword;
+                  profile = "Modern2023";
+                };
+              };
             };
-            volumesByName = {
-              tls.secret.secretName = "plex-tls";
-              var-tmp.emptyDir = { };
-              tmp.emptyDir = { };
-            }
-            // lib.mapAttrs' (name: value: {
-              name = (hllib.k8s.pathToMountName name);
-              inherit value;
-            }) cfg.volumes;
+            services.plex-external = {
+              metadata = {
+                inherit labels;
+                annotations = {
+                  "external-dns.alpha.kubernetes.io/hostname" = domain;
+                }
+                // lib.optionalAttrs (builtins.length cfg.reservedIPs > 0) {
+                  "lbipam.cilium.io/ips" = lib.join "," cfg.reservedIPs;
+                };
+              };
+              spec = ipFamilies // {
+                type = "LoadBalancer";
+                selector = labels;
+                ports = {
+                  web = {
+                    port = 443;
+                    targetPort = 32400;
+                  };
+                  plex = {
+                    port = 32400;
+                    targetPort = 32400;
+                  };
+                };
+              };
+            };
+          };
+          submodules.instances = {
+            configure =
+              let
+                apiUrl = "https://plex.plex:32400/:/prefs";
+                queryParams = {
+                  IPNetworkType =
+                    {
+                      "10" = "v4only";
+                      "01" = "v6only";
+                      "11" = "dualstack";
+                    }
+                    .${
+                      lib.concatMapStrings (on: if on then "1" else "0") [
+                        ccfg.enableIPv4
+                        ccfg.enableIPv6
+                      ]
+                    };
+                  secureConnections = "1"; # "Preferred", needed for Arr stack connectivity
+                  DisableTLSv1_0 = "1";
+                  customConnections = "https://${domain}:443/";
+                  customCertificatePath = "/tls/keystore.p12";
+                  customCertificateKey = keystorePassword;
+                  customCertificateDomain = domain;
+                };
+                queryString = lib.join "&" (
+                  lib.mapAttrsToList (name: value: "${name}=${lib.escapeURL value}") queryParams
+                );
+              in
+              {
+                submodule = "script";
+                args = {
+                  allowEgress = [ "plex" ];
+                  script = ''
+                    set -eo pipefail
+                    echo "Configuring Plex" >&2
+                    if curl --insecure -sfX PUT '${apiUrl}?${queryString}' \
+                      -H "X-Plex-Token: ''${PLEX_API_KEY:?}"; then
+                      echo "Successfully configured Plex" >&2
+                    else
+                      echo "Failed to configure Plex" >&2
+                      exit 1
+                    fi
+                  '';
+                  container.envFrom = [ { secretRef.name = "plex-api-key"; } ];
+                };
+              };
+            plex = {
+              submodule = "workload";
+              args = {
+                allowIngress = cfg.allowIngress;
+                allowEgress = [ "internet" ];
+                dataPath = "/Library";
+                ports.web = 32400;
+                container = {
+                  image = "${image.buildArgs.name}:${image.imageTag}";
+                  imagePullPolicy = "Never";
+                  livenessProbe.httpGet = {
+                    scheme = "HTTPS";
+                    port = "web";
+                    path = "/identity";
+                  };
+                  readinessProbe.httpGet = {
+                    scheme = "HTTPS";
+                    port = "web";
+                    path = "/identity";
+                  };
+                  volumeMounts = {
+                    "/tls".name = "tls";
+                    "/var/tmp".name = "var-tmp";
+                    "/tmp".name = "tmp";
+                  }
+                  // lib.mapAttrs (path: _: {
+                    name = hllib.k8s.pathToMountName path;
+                    readOnly = true;
+                  }) cfg.volumes;
+                };
+              };
+              config.kubernetes.resources = {
+                services.plex.spec = ipFamilies;
+                deployments.plex.spec.template.spec = {
+                  initContainers.rm-lock = {
+                    image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
+                    imagePullPolicy = "Never";
+                    args = [
+                      ''rm -f "/Library/Application Support/Plex Media Server/plexmediaserver.pid"''
+                    ];
+                    securityContext.readOnlyRootFilesystem = true;
+                    volumeMounts."/Library".name = "data";
+                  };
+                  volumes = {
+                    tls.secret.secretName = "plex-tls";
+                    var-tmp.emptyDir = { };
+                    tmp.emptyDir = { };
+                  }
+                  // lib.mapAttrs' (
+                    path: source: lib.nameValuePair (hllib.k8s.pathToMountName path) source
+                  ) cfg.volumes;
+                };
+              };
+            };
           };
         };
       };
-    };
   };
 }

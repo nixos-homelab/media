@@ -42,7 +42,7 @@ in
         widgets = [
           {
             type = "sonarr";
-            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.sonarr.workload;
+            url = "http://sonarr.sonarr:8989";
             key = "{{HOMEPAGE_VAR_SONARR_API_KEY}}";
           }
         ];

@@ -43,30 +43,32 @@ in
       }
     ];
     services.k3s.images = [ image ];
-    kubetree.resources.flood.workload = {
-      apiVersion = "cluster.local";
-      kind = "WorkloadMacro";
-      metadata.name = "flood";
-      spec = {
-        allowEgress = [ "rtorrent" ];
-        ingressPort = 3000;
-        dataPath = "/data";
-        podSpecMacro.mainContainer = {
-          image = "${image.buildArgs.name}:${image.imageTag}";
-          imagePullPolicy = "Never";
-          args = [
-            "--host=0.0.0.0"
-            "--rthost=rtorrent.rtorrent"
-            "--rtport=5000"
-            "--rundir=/data"
-            "--auth=none"
-          ];
-          portsByName.web = 3000;
-          livenessProbe.httpGet.port = "web";
-          readinessProbe.httpGet.port = "web";
-          volumeMountsByPath."/torrents" = "downloads";
+    homelab.kubernetes.submodules.instances.flood = {
+      submodule = "manifest";
+      config.submodules.instances.flood = {
+        submodule = "workload";
+        args = {
+          allowEgress = [ "rtorrent" ];
+          ingressPort = 3000;
+          dataPath = "/data";
+          ports.web = 3000;
+          container = {
+            image = "${image.buildArgs.name}:${image.imageTag}";
+            imagePullPolicy = "Never";
+            args = [
+              "--host=0.0.0.0"
+              "--rthost=rtorrent.rtorrent"
+              "--rtport=5000"
+              "--rundir=/data"
+              "--auth=none"
+            ];
+            livenessProbe.httpGet.port = "web";
+            readinessProbe.httpGet.port = "web";
+            volumeMounts."/torrents".name = "downloads";
+          };
         };
-        podSpecMacro.volumesByName.downloads = config.homelab.rtorrent.downloadsVolume;
+        config.kubernetes.resources.deployments.flood.spec.template.spec.volumes.downloads =
+          config.homelab.rtorrent.downloadsVolume;
       };
     };
   };

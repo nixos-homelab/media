@@ -33,7 +33,7 @@ in
         widgets = [
           {
             type = "flood";
-            url = hllib.workload-macros.workloadServiceUrl config.kubetree.resources.flood.workload;
+            url = "http://flood.flood:3000";
             # Prevent issue where an empty body in the login API call causes an error
             username = " ";
             password = " ";

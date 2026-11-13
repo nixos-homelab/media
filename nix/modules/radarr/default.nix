@@ -50,11 +50,9 @@ in
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
     services.k3s.images = [ image ];
-    kubetree.resources.radarr.workload = {
-      apiVersion = "cluster.local";
-      kind = "WorkloadMacro";
-      metadata.name = "radarr";
-      spec = {
+    homelab.kubernetes.submodules.instances.radarr = {
+      submodule = "workload";
+      args = {
         allowEgress = [
           "internet"
           "plex"
@@ -64,71 +62,64 @@ in
         ];
         ingressPort = 7878;
         dataPath = "/data";
-        podSpecMacro = {
-          mainContainer = {
-            image = "${image.buildArgs.name}:${image.imageTag}";
-            imagePullPolicy = "Never";
-            args = [ "-data=/data" ];
-            workingDir = "/data";
-            # securityContext.supplementalGroups = [ 100 ];
-            addCapabilities = [ "CHOWN" ];
-            envByName.RADARR__AUTH__ENABLED = "false";
-            envByName.RADARR__AUTH__METHOD = "External";
-            envByName.RADARR__APP__LAUNCHBROWSER = "false";
-            envByName.RADARR__UPDATE__MECHANISM = "external";
-            portsByName.web = 7878;
-            # It doesn't answer for seconds at a time while busy (RSS sync, imports), and the 1 s default timeout
-            # had it restarted many times a day
-            livenessProbe = {
-              httpGet = {
-                port = "web";
-                path = "/ping";
-              };
-              timeoutSeconds = 10;
+        ports.web = 7878;
+        container = {
+          image = "${image.buildArgs.name}:${image.imageTag}";
+          imagePullPolicy = "Never";
+          args = [ "-data=/data" ];
+          workingDir = "/data";
+          securityContext.capabilities.add = [ "CHOWN" ];
+          env.RADARR__AUTH__ENABLED.value = "false";
+          env.RADARR__AUTH__METHOD.value = "External";
+          env.RADARR__APP__LAUNCHBROWSER.value = "false";
+          env.RADARR__UPDATE__MECHANISM.value = "external";
+          # It doesn't answer for seconds at a time while busy (RSS sync, imports), and the 1 s default timeout
+          # had it restarted many times a day
+          livenessProbe = {
+            httpGet = {
+              port = "web";
+              path = "/ping";
             };
-            readinessProbe = {
-              httpGet = {
-                port = "web";
-                path = "/ping";
-              };
-              timeoutSeconds = 10;
-            };
-            startupProbe = {
-              httpGet = {
-                port = "web";
-                path = "/ping";
-              };
-              timeoutSeconds = 10;
-              failureThreshold = 30;
-            };
-            volumeMountsByPath = {
-              "/tmp" = "tmp";
-            }
-            // lib.mapAttrs' (name: value: {
-              inherit name;
-              value = (hllib.k8s.pathToMountName name);
-            }) cfg.volumes
-            // lib.optionalAttrs config.homelab.rtorrent.enable {
-              "/torrents" = "torrents";
-            }
-            // lib.optionalAttrs config.homelab.sabnzbd.enable {
-              "/usenet" = "usenet";
-            };
+            timeoutSeconds = 10;
           };
-          volumesByName = {
-            tmp.emptyDir = { };
+          readinessProbe = {
+            httpGet = {
+              port = "web";
+              path = "/ping";
+            };
+            timeoutSeconds = 10;
+          };
+          startupProbe = {
+            httpGet = {
+              port = "web";
+              path = "/ping";
+            };
+            timeoutSeconds = 10;
+            failureThreshold = 30;
+          };
+          volumeMounts = {
+            "/tmp".name = "tmp";
           }
-          // lib.mapAttrs' (name: value: {
-            name = (hllib.k8s.pathToMountName name);
-            inherit value;
-          }) cfg.volumes
+          // lib.mapAttrs (path: _: { name = hllib.k8s.pathToMountName path; }) cfg.volumes
           // lib.optionalAttrs config.homelab.rtorrent.enable {
-            torrents = config.homelab.rtorrent.downloadsVolume;
+            "/torrents".name = "torrents";
           }
           // lib.optionalAttrs config.homelab.sabnzbd.enable {
-            usenet = config.homelab.sabnzbd.downloadsVolume;
+            "/usenet".name = "usenet";
           };
         };
+      };
+      config.kubernetes.resources.deployments.radarr.spec.template.spec.volumes = {
+        tmp.emptyDir = { };
+      }
+      // lib.mapAttrs' (
+        path: source: lib.nameValuePair (hllib.k8s.pathToMountName path) source
+      ) cfg.volumes
+      // lib.optionalAttrs config.homelab.rtorrent.enable {
+        torrents = config.homelab.rtorrent.downloadsVolume;
+      }
+      // lib.optionalAttrs config.homelab.sabnzbd.enable {
+        usenet = config.homelab.sabnzbd.downloadsVolume;
       };
     };
   };
