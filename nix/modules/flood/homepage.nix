@@ -5,7 +5,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.flood;
   hllib = inputs.homelab-shared.lib;
 in
@@ -29,7 +28,7 @@ in
         enable = lib.mkDefault true;
         icon = "flood.png";
         description = "rTorrent WebUI";
-        href = "https://flood.${ccfg.domain}";
+        href = "https://flood.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "flood";

@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.radarr;
   hllib = inputs.homelab-shared.lib;
 in
@@ -38,7 +37,7 @@ in
         enable = lib.mkDefault true;
         icon = "radarr.png";
         description = "Movie library manager";
-        href = "https://radarr.${ccfg.domain}";
+        href = "https://radarr.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "radarr";

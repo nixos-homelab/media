@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.prowlarr;
   hllib = inputs.homelab-shared.lib;
 in
@@ -38,7 +37,7 @@ in
         enable = lib.mkDefault true;
         icon = "prowlarr.png";
         description = "Index scraper";
-        href = "https://prowlarr.${ccfg.domain}";
+        href = "https://prowlarr.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "prowlarr";

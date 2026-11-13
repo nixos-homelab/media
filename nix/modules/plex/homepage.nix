@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.plex;
   hllib = inputs.homelab-shared.lib;
 in
@@ -38,7 +37,7 @@ in
         enable = lib.mkDefault true;
         icon = "plex.png";
         description = "Media center";
-        href = "https://plex.${ccfg.domain}";
+        href = "https://plex.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "plex";

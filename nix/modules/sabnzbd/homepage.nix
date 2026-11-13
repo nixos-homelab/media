@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.sabnzbd;
   hllib = inputs.homelab-shared.lib;
 in
@@ -38,7 +37,7 @@ in
         enable = lib.mkDefault true;
         icon = "sabnzbd.png";
         description = "The automated Usenet download tool ";
-        href = "https://sabnzbd.${ccfg.domain}";
+        href = "https://sabnzbd.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "sabnzbd";

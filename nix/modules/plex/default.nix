@@ -27,8 +27,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} plex
-      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g plex -d / plex
+      groupadd -r -g ${toString config.homelab.workloads.securityContext.runAsGroup} plex
+      useradd -r -u ${toString config.homelab.workloads.securityContext.runAsUser} -g plex -d / plex
       # https://github.com/NixOS/nixpkgs/blob/3f40c4f8c496308680d71d9e17bce452928a2e17/pkgs/servers/plex/default.nix#L57
       cat "${pkgs.plexRaw.basedb}" >/db
     '';
@@ -58,9 +58,9 @@ in
     tlsDomains = lib.mkOption {
       description = "List of domains the plex serving certificate should contain";
       type = lib.types.listOf lib.types.str;
-      default = [ "plex.${ccfg.domain}" ];
-      defaultText = lib.literalExpression ''[ "plex.''${ccfg.domain}"]'';
-      example = lib.literalExpression ''["plex.''${ccfg.domain}" "plex.external.''${ccfg.domain}"]'';
+      default = [ "plex.${config.homelab.workloads.domain}" ];
+      defaultText = lib.literalExpression ''[ "plex.''${config.homelab.workloads.domain}"]'';
+      example = lib.literalExpression ''["plex.''${config.homelab.workloads.domain}" "plex.external.''${config.homelab.workloads.domain}"]'';
     };
     volumes = lib.mkOption {
       description = "Volumes to mount into the container expressed as a map of mountpath to volume source (as specificed on the pod spec).";
@@ -97,7 +97,7 @@ in
     ];
     homelab.kubernetes.submodules.instances.plex =
       let
-        domain = "plex.${ccfg.domain}";
+        domain = "plex.${config.homelab.workloads.domain}";
         keystorePassword = "plex";
         labels."app.kubernetes.io/name" = "plex";
         ipFamilies = {
@@ -120,7 +120,7 @@ in
                 issuerRef = {
                   group = "cert-manager.io";
                   kind = "ClusterIssuer";
-                  name = config.kubetree.workload-macros.acmeProvider;
+                  name = config.homelab.workloads.acmeProvider;
                 };
                 keystores.pkcs12 = {
                   create = true;

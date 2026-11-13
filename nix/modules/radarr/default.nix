@@ -26,8 +26,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} radarr
-      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g radarr -d /data radarr
+      groupadd -r -g ${toString config.homelab.workloads.securityContext.runAsGroup} radarr
+      useradd -r -u ${toString config.homelab.workloads.securityContext.runAsUser} -g radarr -d /data radarr
     '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.radarr) ];
   };

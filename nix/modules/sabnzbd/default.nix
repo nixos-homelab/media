@@ -33,8 +33,8 @@ let
     # runAsRoot = ''
     #   #!${pkgs.runtimeShell}
     #   ${pkgs.dockerTools.shadowSetup}
-    #   groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} sabnzbd
-    #   useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g sabnzbd -d /data sabnzbd
+    #   groupadd -r -g ${toString config.homelab.workloads.securityContext.runAsGroup} sabnzbd
+    #   useradd -r -u ${toString config.homelab.workloads.securityContext.runAsUser} -g sabnzbd -d /data sabnzbd
     # '';
     config.Entrypoint = [ (lib.getExe sabnzbd) ];
   };
@@ -107,7 +107,7 @@ in
                   [misc]
                   host = 0.0.0.0
                   port = 8080
-                  host_whitelist = sabnzbd.${ccfg.domain},sabnzbd.sabnzbd,
+                  host_whitelist = sabnzbd.${config.homelab.workloads.domain},sabnzbd.sabnzbd,
                   download_dir = /usenet/incomplete
                   complete_dir = /usenet/complete
                   schedlines = "1 0 21 7 create_backup ",

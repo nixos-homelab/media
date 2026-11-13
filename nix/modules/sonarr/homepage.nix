@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.sonarr;
   hllib = inputs.homelab-shared.lib;
 in
@@ -38,7 +37,7 @@ in
         enable = lib.mkDefault true;
         icon = "sonarr.png";
         description = "TV Show library manager";
-        href = "https://sonarr.${ccfg.domain}";
+        href = "https://sonarr.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "sonarr";

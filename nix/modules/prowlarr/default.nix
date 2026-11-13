@@ -26,8 +26,8 @@ let
     runAsRoot = ''
       #!${pkgs.runtimeShell}
       ${pkgs.dockerTools.shadowSetup}
-      groupadd -r -g ${toString config.kubetree.workload-macros.securityContext.runAsGroup} prowlarr
-      useradd -r -u ${toString config.kubetree.workload-macros.securityContext.runAsUser} -g prowlarr -d /data prowlarr
+      groupadd -r -g ${toString config.homelab.workloads.securityContext.runAsGroup} prowlarr
+      useradd -r -u ${toString config.homelab.workloads.securityContext.runAsUser} -g prowlarr -d /data prowlarr
     '';
     config.Entrypoint = [ (pkgs.lib.getExe pkgs.prowlarr) ];
   };
