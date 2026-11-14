@@ -74,7 +74,11 @@ in
       type = lib.types.attrsOf lib.types.anything;
     };
   };
-  imports = [ inputs.homelab-networking.nixosModules.privacy-vpn ];
+  imports = [
+    inputs.homelab-networking.nixosModules.privacy-vpn
+    # The Cilium types, for world-to-rtorrent
+    inputs.homelab-networking.nixosModules.cilium-crds
+  ];
   config = lib.mkIf cfg.enable {
     # With the privacy VPN, peers come in through its port mapping
     networking.firewall =
@@ -224,58 +228,16 @@ in
                   ];
                 };
               };
-              # The pair of policies a pod-running submodule gets from `policyPorts`, by hand, since the pods are
-              # in the rtorrent-deployment manifest: pods labeled `cluster.local/rtorrent-egress: allow` may reach 5000
-              ciliumClusterwideNetworkPolicies.pod-to-rtorrent = {
-                metadata = {
-                  inherit labels;
-                  namespace = null;
-                };
-                spec = {
-                  endpointSelector.matchLabels."cluster.local/rtorrent-egress" = "allow";
-                  egress = [
-                    {
-                      toEndpoints = [
-                        {
-                          matchLabels = labels // {
-                            "k8s:io.kubernetes.pod.namespace" = "rtorrent";
-                          };
-                        }
-                      ];
-                      toPorts = toPorts [ 5000 ];
-                    }
-                  ];
-                };
-              };
-              ciliumNetworkPolicies.rtorrent-from-pod = {
-                metadata = { inherit labels; };
-                spec = {
-                  endpointSelector.matchLabels = labels;
-                  ingress = [
-                    {
-                      fromEndpoints = [
-                        {
-                          matchExpressions = [
-                            {
-                              key = "k8s:io.kubernetes.pod.namespace";
-                              operator = "Exists";
-                            }
-                            {
-                              key = "cluster.local/rtorrent-egress";
-                              operator = "In";
-                              values = [ "allow" ];
-                            }
-                          ];
-                        }
-                      ];
-                      toPorts = toPorts [ 5000 ];
-                    }
-                  ];
-                };
-              };
             };
             submodules.instances.rtorrent = {
               submodule = "service";
+              args.ports.scgi = 5000;
+            };
+            # The pods of rtorrent-deployment, here since that manifest isn't always k3s': pods labeled
+            # `cluster.local/rtorrent-egress: allow` may reach 5000
+            submodules.instances.rtorrent-pods = {
+              name = "rtorrent";
+              submodule = "pods";
               args.ports.scgi = 5000;
             };
           };

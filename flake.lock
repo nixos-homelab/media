@@ -454,11 +454,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794640169,
-        "narHash": "sha256-Nrhz2cb/mL6/1fArEdl3Zll75yfG70EmczVguL+wfMc=",
+        "lastModified": 1794643693,
+        "narHash": "sha256-WS/301t8WX90DBYnSDRRrhdMYHJ4vVWlQWWrqAua1tk=",
         "owner": "nixos-homelab",
         "repo": "networking",
-        "rev": "1961dd6c1af0ffc9598bac58a2d6ffb51ccd23c9",
+        "rev": "9d987d48cfaea3ba5c9db569ae59ff5aaf3c891b",
         "type": "github"
       },
       "original": {
@@ -495,11 +495,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794640154,
-        "narHash": "sha256-dokhL9zP5LdIT6ZuBLkCDbe1yVdeqB1HgP6iuQuPZlc=",
+        "lastModified": 1794641875,
+        "narHash": "sha256-F1NofW3TsUHNHwVcXYzuQGBUstHQYdB0YWUuPEDQyqI=",
         "owner": "nixos-homelab",
         "repo": "shared",
-        "rev": "127ea10e956144408d59536fd02f41e2c4a4565f",
+        "rev": "01b97d63e1fee636fdeb5c781d7de8142d1b2954",
         "type": "github"
       },
       "original": {
@@ -531,11 +531,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794640154,
-        "narHash": "sha256-dokhL9zP5LdIT6ZuBLkCDbe1yVdeqB1HgP6iuQuPZlc=",
+        "lastModified": 1794641875,
+        "narHash": "sha256-F1NofW3TsUHNHwVcXYzuQGBUstHQYdB0YWUuPEDQyqI=",
         "owner": "nixos-homelab",
         "repo": "shared",
-        "rev": "127ea10e956144408d59536fd02f41e2c4a4565f",
+        "rev": "01b97d63e1fee636fdeb5c781d7de8142d1b2954",
         "type": "github"
       },
       "original": {
