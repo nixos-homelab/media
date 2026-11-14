@@ -11,11 +11,20 @@ let
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   # Without notify2 (desktop notifications, optional in sabnzbd), which drags in dbus, glib and their -dev outputs
-  sabnzbd = pkgs.sabnzbd.override {
-    python3 = pkgs.python3 // {
-      withPackages = f: pkgs.python3.withPackages (ps: lib.remove ps.notify2 (f ps));
-    };
-  };
+  sabnzbd =
+    (pkgs.sabnzbd.override {
+      python3 = pkgs.python3 // {
+        withPackages = f: pkgs.python3.withPackages (ps: lib.remove ps.notify2 (f ps));
+      };
+    }).overrideAttrs
+      (old: {
+        # The package writes the script its wrapper runs without a shebang, so bash runs it and keeps python as a
+        # child: PID 1 of the container is bash, which ignores SIGTERM. With a shebang and exec, python is PID 1 and
+        # shuts down on the handler it installs
+        postInstall = old.postInstall or "" + ''
+          sed -i -e '1s/^/exec /' -e '1s/\$\*$/"$@"/' -e '1i #!${pkgs.runtimeShell}' "$out/bin/.sabnzbd-wrapped"
+        '';
+      });
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sabnzbd";
     copyToRoot = [

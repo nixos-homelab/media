@@ -67,8 +67,12 @@ in
             volumeMounts."/torrents".name = "downloads";
           };
         };
-        config.kubernetes.resources.deployments.flood.spec.template.spec.volumes.downloads =
-          config.homelab.rtorrent.downloadsVolume;
+        config.kubernetes.resources.deployments.flood.spec.template.spec = {
+          # node runs as PID 1 of the container otherwise, where SIGTERM does nothing without a handler, and flood has
+          # none: it was killed at the end of the grace period. With the pause container as PID 1 SIGTERM ends it
+          shareProcessNamespace = true;
+          volumes.downloads = config.homelab.rtorrent.downloadsVolume;
+        };
       };
     };
   };
