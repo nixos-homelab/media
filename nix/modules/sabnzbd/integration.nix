@@ -38,7 +38,7 @@ let
         } spec
       )
       (
-        lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
+        lib.filterAttrs (name: _value: cfg.integrations.${name}.enable) {
           sonarr = {
             apiEndpoint = "http://sonarr.sonarr:8989/api/v3/downloadclient";
             settings = lib.recursiveUpdate {

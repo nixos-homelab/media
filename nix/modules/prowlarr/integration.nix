@@ -30,7 +30,7 @@ let
         } spec
       )
       (
-        lib.filterAttrs (name: value: cfg.integrations.${name}.enable) {
+        lib.filterAttrs (name: _value: cfg.integrations.${name}.enable) {
           sonarr.settings = cfg.integrations.sonarr.settings // {
             name = "Sonarr";
             implementationName = "Sonarr";

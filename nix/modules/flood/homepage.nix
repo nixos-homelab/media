@@ -6,7 +6,6 @@
 }:
 let
   cfg = config.homelab.homepage.integrations.flood;
-  hllib = inputs.homelab-shared.lib;
 in
 {
   options.homelab.homepage.integrations.flood = {
