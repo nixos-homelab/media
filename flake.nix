@@ -11,11 +11,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
     };
-    kubetree = {
-      url = "github:andsens/nix-kubetree";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-parts.follows = "flake-parts";
-    };
     setup-secrets = {
       url = "github:andsens/nixos-setup-secrets";
       inputs.systems.follows = "systems";
@@ -28,7 +23,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.setup-secrets.follows = "setup-secrets";
-      inputs.kubetree.follows = "kubetree";
       inputs.kube-generators.follows = "kube-generators";
     };
     homelab-networking = {
@@ -37,7 +31,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.setup-secrets.follows = "setup-secrets";
-      inputs.kubetree.follows = "kubetree";
       inputs.kube-generators.follows = "kube-generators";
     };
   };
