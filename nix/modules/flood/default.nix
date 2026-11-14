@@ -42,7 +42,7 @@ in
         message = "The rtorrent service must be enabled in order for flood to work (homelab.rtorrent.enable)";
       }
     ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.flood = {
       submodule = "manifest";
       config.submodules.instances.flood = {

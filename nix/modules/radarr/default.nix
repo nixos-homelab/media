@@ -49,7 +49,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.radarr = {
       submodule = "workload";
       args = {

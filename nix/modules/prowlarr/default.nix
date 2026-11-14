@@ -50,7 +50,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.prowlarr = {
       submodule = "manifest";
       config.submodules.instances.prowlarr = {

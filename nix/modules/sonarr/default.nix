@@ -54,7 +54,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n sonarr -c sonarr deploy/sonarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.sonarr.sonarr = [ "/Backups" ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.sonarr = {
       submodule = "workload";
       args = {

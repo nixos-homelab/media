@@ -84,7 +84,7 @@ in
       '';
     };
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     setup-secrets.destinations = [
       {
         logPrefix = "Plex API key";

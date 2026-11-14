@@ -65,7 +65,7 @@ in
       '';
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
-    services.k3s.images = [ image ];
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.sabnzbd = {
       submodule = "manifest";
       config.submodules.instances.sabnzbd = {

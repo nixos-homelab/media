@@ -86,15 +86,15 @@ in
         { interfaces.privacy-vpn.allowedTCPPorts = [ bittorrentPort ]; }
       else
         { allowedTCPPorts = [ bittorrentPort ]; };
-    services.k3s.images = [ image ];
-    services.k3s.manifests.rtorrent-deployment.enable = !config.homelab.privacy-vpn.enable;
+    homelab.cluster.images = [ image ];
+    homelab.cluster.manifests.rtorrent-deployment.enable = !config.homelab.privacy-vpn.enable;
     homelab.kubernetes.submodules.instances =
       let
         labels."app.kubernetes.io/name" = "rtorrent";
         toPorts = inputs.homelab-networking.lib.toPorts;
       in
       {
-        # k3s applies it without the privacy VPN; with it, portmap-rtorrent does, with the ports the VPN maps
+        # The runner applies it without the privacy VPN; with it, portmap-rtorrent does, with the ports the VPN maps
         rtorrent-deployment = {
           name = "rtorrent";
           submodule = "deployment";
@@ -233,7 +233,7 @@ in
               submodule = "service";
               args.ports.scgi = 5000;
             };
-            # The pods of rtorrent-deployment, here since that manifest isn't always k3s': pods labeled
+            # The pods of rtorrent-deployment, here since the runner doesn't always apply that manifest: pods labeled
             # `cluster.local/rtorrent-egress: allow` may reach 5000
             submodules.instances.rtorrent-pods = {
               name = "rtorrent";
@@ -256,7 +256,7 @@ in
     systemd.services."portmap-rtorrent" = lib.mkIf (config.homelab.privacy-vpn.enable) {
       description = "Request the privacy VPN server to forward a port for rtorrent and setup the rtorrent deployment";
       after = [
-        "k3s.service"
+        config.homelab.cluster.unit
         "sys-devices-virtual-net-privacy-vpn.device"
       ];
       wants = [ "network-online.target" ];
@@ -303,7 +303,7 @@ in
             kubelib.toYAMLFile (
               lib.findSingle (
                 o: o.kind == "Deployment"
-              ) null null config.services.k3s.manifests.rtorrent-deployment.content
+              ) null null config.homelab.cluster.manifests.rtorrent-deployment.content
             )
           }" "$overlay_dir/rtorrent.yaml"
           cat >"$overlay_dir/ports.yaml" <<EOF
