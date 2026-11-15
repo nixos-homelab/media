@@ -84,7 +84,9 @@ in
               rtorrent-exporter = {
                 image = "${image.buildArgs.name}:${image.imageTag}";
                 imagePullPolicy = "Never";
-                command = [ (lib.getExe rtorrentExporter) ];
+                # The copy at the image's root: buildImage copies the package's files there, and its store path isn't in
+                # the image (the binary doesn't reference itself), so getExe's path doesn't exist in the container
+                command = [ "/bin/rtorrent_exporter" ];
                 args = [
                   "--web.listen-address=:${toString metricsPort}"
                   "--rtorrent.scrape-uri=http://127.0.0.1:${toString bridgePort}/RPC2"
