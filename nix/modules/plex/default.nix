@@ -10,56 +10,6 @@ let
   hllib = inputs.homelab-shared.lib;
   cfg = config.homelab.plex;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
-  plexExporter = pkgs.buildGoModule {
-    pname = "prometheus-plex-exporter";
-    # No releases: main as of 2024-08-21
-    version = "0-unstable-2024-08-21";
-    src = pkgs.fetchFromGitHub {
-      owner = "jsclayton";
-      repo = "prometheus-plex-exporter";
-      rev = "041ea971fadc6db467ef8f792b6f4f824cc3034e";
-      hash = "sha256-hKscZpuBXV0fJ3uAdzfFqyByvOaJNjJTJd8Ey+tD/CQ=";
-    };
-    # Vendored in the repo
-    vendorHash = null;
-    subPackages = [ "cmd/prometheus-plex-exporter" ];
-    meta.mainProgram = "prometheus-plex-exporter";
-  };
-  # The exporter takes the admin token in PLEX_TOKEN. Plex keeps the token of the account that claimed it in
-  # Preferences.xml, on the data volume the sidecar mounts read-only: no secret to set up. It exits when Plex isn't up
-  # at its start or its event stream drops, and a sidecar that restarts takes the pod out of the Service, so this
-  # runs it again instead, and waits for the token while the server isn't claimed yet
-  plexExporterWrapper = pkgs.writeShellApplication {
-    name = "plex-exporter";
-    runtimeInputs = [
-      plexExporter
-      pkgs.xq-xml
-      pkgs.coreutils
-    ];
-    text = ''
-      prefs=$1
-      pid=
-      trap 'kill "$pid" 2>/dev/null; wait "$pid" || true; exit 0' TERM INT
-      while :; do
-        if PLEX_TOKEN=$(xq -x '//Preferences/@PlexOnlineToken' "$prefs" 2>/dev/null) && [[ -n $PLEX_TOKEN ]]; then
-          export PLEX_TOKEN
-          prometheus-plex-exporter &
-          pid=$!
-          wait "$pid" || true
-        fi
-        sleep 10 &
-        pid=$!
-        wait "$pid" || true
-      done
-    '';
-  };
-  plexExporterImage = pkgs.dockerTools.buildImage {
-    name = "cluster.local/plex-exporter";
-    copyToRoot = [ plexExporterWrapper ] ++ lib.optionals cfg.debug ccfg.debugTools;
-    config.Entrypoint = [ (lib.getExe plexExporterWrapper) ];
-  };
-  # Where it listens, fixed in the exporter
-  plexExporterPort = 9000;
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/plex";
     copyToRoot =
@@ -120,11 +70,11 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.homelab-monitoring.nixosModules.alloy
   ]
   ++ self.lib.importsApply [
     ./integration.nix
     ./homepage.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.PLEX_API_KEY = {
@@ -135,11 +85,7 @@ in
       '';
     };
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
-    homelab.cluster.images = [
-      image
-      plexExporterImage
-    ];
-    homelab.alloy.monitors.plex = { };
+    homelab.cluster.images = [ image ];
     setup-secrets.destinations = [
       {
         logPrefix = "Plex API key";
@@ -263,8 +209,6 @@ in
                 allowEgress = [ "internet" ];
                 dataPath = "/Library";
                 ports.web = 32400;
-                # The sidecar's: the Service and the policies come from `ports`, which puts it on the main container too
-                ports.metrics = plexExporterPort;
                 container = {
                   image = "${image.buildArgs.name}:${image.imageTag}";
                   imagePullPolicy = "Never";
@@ -292,22 +236,6 @@ in
               config.kubernetes.resources = {
                 services.plex.spec = ipFamilies;
                 deployments.plex.spec.template.spec = {
-                  # After the main container: kubectl logs and exec still go to Plex without -c
-                  containers.plex-exporter = {
-                    image = "${plexExporterImage.buildArgs.name}:${plexExporterImage.imageTag}";
-                    imagePullPolicy = "Never";
-                    args = [ "/Library/Application Support/Plex Media Server/Preferences.xml" ];
-                    env.PLEX_SERVER.value = "http://127.0.0.1:32400";
-                    securityContext = {
-                      allowPrivilegeEscalation = false;
-                      readOnlyRootFilesystem = true;
-                      capabilities.drop = [ "ALL" ];
-                    };
-                    volumeMounts."/Library" = {
-                      name = "data";
-                      readOnly = true;
-                    };
-                  };
                   initContainers.rm-lock = {
                     image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
                     imagePullPolicy = "Never";

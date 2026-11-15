@@ -9,7 +9,6 @@ let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.sabnzbd;
   hllib = inputs.homelab-shared.lib;
-  exportarr = import ../exportarr.nix { inherit pkgs lib; };
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   # Without notify2 (desktop notifications, optional in sabnzbd), which drags in dbus, glib and their -dev outputs
   sabnzbd =
@@ -61,11 +60,11 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-networking.nixosModules.privacy-vpn
-    inputs.homelab-monitoring.nixosModules.alloy
   ]
   ++ self.lib.importsApply [
     ./integration.nix
     ./homepage.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.SABNZBD_API_KEY = {
@@ -76,11 +75,7 @@ in
       '';
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
-    homelab.cluster.images = [
-      image
-      exportarr.image
-    ];
-    homelab.alloy.monitors.sabnzbd = { };
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.sabnzbd = {
       submodule = "manifest";
       config.submodules.instances.sabnzbd = {
@@ -90,8 +85,6 @@ in
           ingressPort = 8080;
           dataPath = "/data";
           ports.web = 8080;
-          # The sidecar's: the Service and the policies come from `ports`, which puts it on the main container too
-          ports.metrics = exportarr.port;
           container = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
@@ -111,18 +104,10 @@ in
           };
         };
         config.kubernetes.resources.deployments.sabnzbd.spec.template = {
-          # The sidecar sorts first, where kubectl logs and exec would go without -c
-          metadata.annotations."kubectl.kubernetes.io/default-container" = "sabnzbd";
           metadata.labels = lib.optionalAttrs config.homelab.privacy-vpn.enable {
             "cluster.local/egress-gateway" = "privacy-vpn";
           };
           spec = {
-            containers.exportarr = exportarr.container {
-              app = "sabnzbd";
-              url = "http://127.0.0.1:8080";
-              dataPath = "/data";
-              config = "sabnzbd.ini";
-            };
             initContainers.setup-config = {
               image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
               imagePullPolicy = "Never";

@@ -9,7 +9,6 @@ let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.prowlarr;
   hllib = inputs.homelab-shared.lib;
-  exportarr = import ../exportarr.nix { inherit pkgs lib; };
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/prowlarr";
     copyToRoot =
@@ -41,11 +40,11 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-storage.nixosModules.postgresql
-    inputs.homelab-monitoring.nixosModules.alloy
   ]
   ++ self.lib.importsApply [
     ./homepage.nix
     ./integration.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     # A main and a log database: both migrate with one version table, so they can't share a database
@@ -67,11 +66,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
-    homelab.cluster.images = [
-      image
-      exportarr.image
-    ];
-    homelab.alloy.monitors.prowlarr = { };
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.prowlarr = {
       submodule = "manifest";
       config.submodules.instances.prowlarr = {
@@ -88,8 +83,6 @@ in
           ingressPort = 9696;
           dataPath = "/data";
           ports.web = 9696;
-          # The sidecar's: the Service and the policies come from `ports`, which puts it on the main container too
-          ports.metrics = exportarr.port;
           container = {
             image = "${image.buildArgs.name}:${image.imageTag}";
             imagePullPolicy = "Never";
@@ -140,17 +133,7 @@ in
             volumeMounts."/tmp".name = "tmp";
           };
         };
-        config.kubernetes.resources.deployments.prowlarr.spec.template = {
-          # The sidecar sorts first, where kubectl logs and exec would go without -c
-          metadata.annotations."kubectl.kubernetes.io/default-container" = "prowlarr";
-          spec.containers.exportarr = exportarr.container {
-            app = "prowlarr";
-            url = "http://127.0.0.1:9696";
-            dataPath = "/data";
-            config = "config.xml";
-          };
-          spec.volumes.tmp.emptyDir = { };
-        };
+        config.kubernetes.resources.deployments.prowlarr.spec.template.spec.volumes.tmp.emptyDir = { };
       };
     };
   };

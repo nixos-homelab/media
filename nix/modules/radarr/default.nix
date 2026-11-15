@@ -9,7 +9,6 @@ let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.radarr;
   hllib = inputs.homelab-shared.lib;
-  exportarr = import ../exportarr.nix { inherit pkgs lib; };
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/radarr";
     copyToRoot =
@@ -46,9 +45,11 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-storage.nixosModules.postgresql
-    inputs.homelab-monitoring.nixosModules.alloy
   ]
-  ++ self.lib.importsApply [ ./homepage.nix ];
+  ++ self.lib.importsApply [
+    ./homepage.nix
+    ./metrics.nix
+  ];
   config = lib.mkIf cfg.enable {
     # A main and a log database: both migrate with one version table, so they can't share a database
     homelab.postgresql.databases = {
@@ -69,11 +70,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
-    homelab.cluster.images = [
-      image
-      exportarr.image
-    ];
-    homelab.alloy.monitors.radarr = { };
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.radarr = {
       submodule = "workload";
       args = {
@@ -88,8 +85,6 @@ in
         ingressPort = 7878;
         dataPath = "/data";
         ports.web = 7878;
-        # The sidecar's: the Service and the policies come from `ports`, which puts it on the main container too
-        ports.metrics = exportarr.port;
         container = {
           image = "${image.buildArgs.name}:${image.imageTag}";
           imagePullPolicy = "Never";
@@ -148,16 +143,6 @@ in
           // lib.optionalAttrs config.homelab.sabnzbd.enable {
             "/usenet".name = "usenet";
           };
-        };
-      };
-      config.kubernetes.resources.deployments.radarr.spec.template = {
-        # The sidecar sorts first, where kubectl logs and exec would go without -c
-        metadata.annotations."kubectl.kubernetes.io/default-container" = "radarr";
-        spec.containers.exportarr = exportarr.container {
-          app = "radarr";
-          url = "http://127.0.0.1:7878";
-          dataPath = "/data";
-          config = "config.xml";
         };
       };
       config.kubernetes.resources.deployments.radarr.spec.template.spec.volumes = {

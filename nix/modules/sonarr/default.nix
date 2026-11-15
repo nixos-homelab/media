@@ -9,7 +9,6 @@ let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.sonarr;
   hllib = inputs.homelab-shared.lib;
-  exportarr = import ../exportarr.nix { inherit pkgs lib; };
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/sonarr";
     copyToRoot =
@@ -51,9 +50,11 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-storage.nixosModules.postgresql
-    inputs.homelab-monitoring.nixosModules.alloy
   ]
-  ++ self.lib.importsApply [ ./homepage.nix ];
+  ++ self.lib.importsApply [
+    ./homepage.nix
+    ./metrics.nix
+  ];
   config = lib.mkIf cfg.enable {
     # A main and a log database: both migrate with one version table, so they can't share a database
     homelab.postgresql.databases = {
@@ -74,11 +75,7 @@ in
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n sonarr -c sonarr deploy/sonarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
     };
     homelab.cluster.backup.volumes.sonarr.sonarr = [ "/Backups" ];
-    homelab.cluster.images = [
-      image
-      exportarr.image
-    ];
-    homelab.alloy.monitors.sonarr = { };
+    homelab.cluster.images = [ image ];
     homelab.kubernetes.submodules.instances.sonarr = {
       submodule = "workload";
       args = {
@@ -93,8 +90,6 @@ in
         ingressPort = 8989;
         dataPath = "/data";
         ports.web = 8989;
-        # The sidecar's: the Service and the policies come from `ports`, which puts it on the main container too
-        ports.metrics = exportarr.port;
         container = {
           image = "${image.buildArgs.name}:${image.imageTag}";
           imagePullPolicy = "Never";
@@ -153,16 +148,6 @@ in
           // lib.optionalAttrs config.homelab.sabnzbd.enable {
             "/usenet".name = "usenet";
           };
-        };
-      };
-      config.kubernetes.resources.deployments.sonarr.spec.template = {
-        # The sidecar sorts first, where kubectl logs and exec would go without -c
-        metadata.annotations."kubectl.kubernetes.io/default-container" = "sonarr";
-        spec.containers.exportarr = exportarr.container {
-          app = "sonarr";
-          url = "http://127.0.0.1:8989";
-          dataPath = "/data";
-          config = "config.xml";
         };
       };
       config.kubernetes.resources.deployments.sonarr.spec.template.spec.volumes = {

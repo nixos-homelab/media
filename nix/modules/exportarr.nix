@@ -66,6 +66,12 @@ in
         # At info it logs every request of every scrape
         "--log-level=warn"
       ];
+      ports = [
+        {
+          name = "metrics";
+          containerPort = port;
+        }
+      ];
       securityContext = {
         allowPrivilegeEscalation = false;
         readOnlyRootFilesystem = true;
