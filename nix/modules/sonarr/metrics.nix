@@ -11,7 +11,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf config.homelab.sonarr.enable (
+  options.homelab.sonarr.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes Sonarr's metrics, and runs its exportarr sidecar.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (config.homelab.sonarr.enable && config.homelab.sonarr.metrics.enable) (
     lib.mkMerge [
       {
         homelab.alloy.monitors.sonarr = {

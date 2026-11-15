@@ -9,7 +9,9 @@
 let
   cfg = config.homelab.plex;
   # Its published image (alpine and the binary; no releases, so main by digest), pinned in the Dockerfile here
-  image = (inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile)."ghcr.io/jsclayton/prometheus-plex-exporter";
+  image =
+    (inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile)
+    ."ghcr.io/jsclayton/prometheus-plex-exporter";
   # The exporter takes the admin token in PLEX_TOKEN. Plex keeps it in Preferences.xml once claimed, on the data
   # volume the sidecar mounts read-only: wait until it's there, then exec the exporter. Waiting keeps the pod Ready,
   # so an unclaimed Plex stays reachable to be claimed; when the exporter exits, the kubelet restarts it
@@ -28,7 +30,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf cfg.enable (
+  options.homelab.plex.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes Plex's metrics, and runs its prometheus-plex-exporter sidecar.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (cfg.enable && cfg.metrics.enable) (
     lib.mkMerge [
       { homelab.alloy.monitors.plex.podPort = port; }
       (lib.mkIf config.homelab.alloy.enable {

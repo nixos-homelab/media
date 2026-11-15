@@ -11,7 +11,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf config.homelab.sabnzbd.enable (
+  options.homelab.sabnzbd.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes SABnzbd's metrics, and runs its exportarr sidecar.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (config.homelab.sabnzbd.enable && config.homelab.sabnzbd.metrics.enable) (
     lib.mkMerge [
       { homelab.alloy.monitors.sabnzbd.podPort = exportarr.port; }
       (lib.mkIf config.homelab.alloy.enable {
