@@ -1,0 +1,1 @@
+FROM ghcr.io/jsclayton/prometheus-plex-exporter:main@sha256:18ef1b2197efbcb75bd7276380955760995f10a9fbe55106809a6fcff91c2940
