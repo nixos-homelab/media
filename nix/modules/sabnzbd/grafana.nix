@@ -73,6 +73,21 @@ in
     '';
   };
   config = lib.mkIf cfg.grafana.enable {
+    homelab.grafana.home.tiles.sabnzbd = {
+      group = "Media";
+      order = 402;
+      panel = g.stat {
+        title = "SABnzbd speed";
+        unit = "Bps";
+        links = [
+          {
+            title = "Media";
+            url = "/d/media/media?\${__url_time_range}";
+          }
+        ];
+        queries = [ (g.prom "sabnzbd_speed_bps{${j}}" { instant = true; }) ];
+      };
+    };
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";

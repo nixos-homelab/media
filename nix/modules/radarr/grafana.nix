@@ -24,6 +24,11 @@ in
     '';
   };
   config = lib.mkIf cfg.grafana.enable {
+    homelab.grafana.home.tiles.radarr = {
+      group = "Media";
+      order = 401;
+      panel = rows.home;
+    };
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";
