@@ -22,8 +22,6 @@ in
       {
         homelab.alloy.monitors.sonarr = {
           podPort = exportarr.port;
-          # Its instance is a workload, which can't hold the policy (kubenix nesting): a manifest of its own
-          manifest = null;
         };
       }
       (lib.mkIf config.homelab.alloy.enable {

@@ -141,6 +141,8 @@
                       };
                       homepage.enable = true;
                       postgresql.enable = true;
+                      # Evaluates the metrics parts of the modules, off with Alloy
+                      alloy.enable = true;
                     };
                   }
                 ];
