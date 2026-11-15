@@ -44,6 +44,7 @@ in
   ++ self.lib.importsApply [
     ./homepage.nix
     ./integration.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     # A main and a log database: both migrate with one version table, so they can't share a database

@@ -46,7 +46,10 @@ in
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-storage.nixosModules.postgresql
   ]
-  ++ self.lib.importsApply [ ./homepage.nix ];
+  ++ self.lib.importsApply [
+    ./homepage.nix
+    ./metrics.nix
+  ];
   config = lib.mkIf cfg.enable {
     # A main and a log database: both migrate with one version table, so they can't share a database
     homelab.postgresql.databases = {

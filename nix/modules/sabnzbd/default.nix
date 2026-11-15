@@ -64,6 +64,7 @@ in
   ++ self.lib.importsApply [
     ./integration.nix
     ./homepage.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.sources.SABNZBD_API_KEY = {

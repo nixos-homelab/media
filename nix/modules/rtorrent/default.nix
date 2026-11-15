@@ -78,7 +78,8 @@ in
     inputs.homelab-networking.nixosModules.privacy-vpn
     # The Cilium types, for world-to-rtorrent
     inputs.homelab-networking.nixosModules.cilium-crds
-  ];
+  ]
+  ++ self.lib.importsApply [ ./metrics.nix ];
   config = lib.mkIf cfg.enable {
     # With the privacy VPN, peers come in through its port mapping
     networking.firewall =

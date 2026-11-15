@@ -46,3 +46,13 @@ For the full list of module options, see [the options reference](https://nixos-h
   through `homelab-networking`'s `privacy-vpn`.
 - **sabnzbd**: Usenet download client, auto-registered the same way as
   `flood`.
+
+## Metrics
+
+With `homelab-monitoring`'s Alloy enabled, Plex, Sonarr, Radarr, Prowlarr,
+SABnzbd and rtorrent get scraped through an exporter in their pod
+([exportarr](https://github.com/onedr0p/exportarr) for the *Arrs and SABnzbd,
+[prometheus-plex-exporter](https://github.com/jsclayton/prometheus-plex-exporter),
+[rtorrent_exporter](https://github.com/thde/rtorrent_exporter)). The exporters
+read the API keys and the Plex token from the apps' own data volumes, so there
+is nothing to configure. Flood has no exporter.
