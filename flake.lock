@@ -183,11 +183,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793753224,
-        "narHash": "sha256-WbCAiOSyvoXrBuyBKIrRs2kZIMNXGLcTdFaJuDrvCZs=",
+        "lastModified": 1794384402,
+        "narHash": "sha256-v8IehW7jv8JU6ra2AbhSGlXZ/wtggtwSeyHx8vbu4IM=",
         "owner": "andsens",
         "repo": "nix-docs",
-        "rev": "4aaff74754f9983899bc2e12c3159dd008808eeb",
+        "rev": "420df18d0c37d3ebe4f99c6e7291024d6fd60f80",
         "type": "github"
       },
       "original": {
@@ -531,16 +531,54 @@
         ]
       },
       "locked": {
-        "lastModified": 1794649628,
-        "narHash": "sha256-gCEMiqQlwuGVKUJUQzjl5vMmR/YimhHxt5jNlB0ESno=",
+        "lastModified": 1794740604,
+        "narHash": "sha256-YqXF6uDsKAQboFHGNB0AFcVOiey8JMY9UfJPi+MJNAg=",
         "owner": "nixos-homelab",
         "repo": "shared",
-        "rev": "826abd1ad7fa9d06239705563def111e92daf70d",
+        "rev": "64017900a7a238cbd71dbbdaeaeac4cfec553b1a",
         "type": "github"
       },
       "original": {
         "owner": "nixos-homelab",
         "repo": "shared",
+        "type": "github"
+      }
+    },
+    "homelab-storage": {
+      "inputs": {
+        "docs": [
+          "docs"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "homelab-shared": [
+          "homelab-shared"
+        ],
+        "kube-generators": [
+          "kube-generators"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "setup-secrets": [
+          "setup-secrets"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794742259,
+        "narHash": "sha256-jNNTEadqTtvyh6fnQ4gIMxKzCEAdl7TBal6F6RsPEDU=",
+        "owner": "nixos-homelab",
+        "repo": "storage",
+        "rev": "615183b303cfeba04d249a1c30034a0de68e8f70",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos-homelab",
+        "repo": "storage",
         "type": "github"
       }
     },
@@ -1099,6 +1137,7 @@
         "flake-parts": "flake-parts",
         "homelab-networking": "homelab-networking",
         "homelab-shared": "homelab-shared_2",
+        "homelab-storage": "homelab-storage",
         "kube-generators": "kube-generators_3",
         "nixpkgs": "nixpkgs",
         "setup-secrets": "setup-secrets",

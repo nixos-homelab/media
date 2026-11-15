@@ -39,12 +39,27 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
+    inputs.homelab-storage.nixosModules.postgresql
   ]
   ++ self.lib.importsApply [
     ./homepage.nix
     ./integration.nix
   ];
   config = lib.mkIf cfg.enable {
+    # A main and a log database: both migrate with one version table, so they can't share a database
+    homelab.postgresql.databases = {
+      prowlarr.backup.enable = lib.mkDefault true;
+      prowlarr-log = {
+        namespace = "prowlarr";
+        username = "prowlarr";
+      };
+    };
+    assertions = [
+      {
+        assertion = config.homelab.postgresql.enable;
+        message = "Prowlarr depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
+      }
+    ];
     setup-secrets.sources.PROWLARR_API_KEY = {
       description = "Prowlarr API Key";
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
@@ -58,6 +73,7 @@ in
         args = {
           allowEgress = [
             "internet"
+            "postgresql"
             "sonarr"
             "radarr"
             "flood"
@@ -75,6 +91,16 @@ in
             env.PROWLARR__AUTH__METHOD.value = "External";
             env.PROWLARR__APP__LAUNCHBROWSER.value = "false";
             env.PROWLARR__UPDATE__MECHANISM.value = "external";
+            # PostgreSQL in place of SQLite on /data, whose I/O at a node shutdown kept a thread in uninterruptible sleep
+            # past SIGKILL and held up the drain
+            env.PROWLARR__POSTGRES__HOST.value = "postgresql.postgresql";
+            env.PROWLARR__POSTGRES__USER.value = "prowlarr";
+            env.PROWLARR__POSTGRES__PASSWORD.valueFrom.secretKeyRef = {
+              name = "postgresql-password";
+              key = "password";
+            };
+            env.PROWLARR__POSTGRES__MAINDB.value = "prowlarr";
+            env.PROWLARR__POSTGRES__LOGDB.value = "prowlarr-log";
             # SIGTERM stops the ASP.NET Core host, which waits up to its shutdown timeout (30 s by default) for the
             # requests in flight. At a node shutdown the kubelet gives pods 20 s, so a request that hung had it killed
             # and held up the drain. The web host reads the host setting shutdownTimeoutSeconds from its ASPNETCORE_

@@ -42,8 +42,26 @@ in
       default = { };
     };
   };
-  imports = [ inputs.setup-secrets.nixosModules.default ] ++ self.lib.importsApply [ ./homepage.nix ];
+  imports = [
+    inputs.setup-secrets.nixosModules.default
+    inputs.homelab-storage.nixosModules.postgresql
+  ]
+  ++ self.lib.importsApply [ ./homepage.nix ];
   config = lib.mkIf cfg.enable {
+    # A main and a log database: both migrate with one version table, so they can't share a database
+    homelab.postgresql.databases = {
+      radarr.backup.enable = lib.mkDefault true;
+      radarr-log = {
+        namespace = "radarr";
+        username = "radarr";
+      };
+    };
+    assertions = [
+      {
+        assertion = config.homelab.postgresql.enable;
+        message = "Radarr depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
+      }
+    ];
     setup-secrets.sources.RADARR_API_KEY = {
       description = "Radarr API Key";
       cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
@@ -55,6 +73,7 @@ in
       args = {
         allowEgress = [
           "internet"
+          "postgresql"
           "plex"
           "prowlarr"
           "flood"
@@ -73,6 +92,16 @@ in
           env.RADARR__AUTH__METHOD.value = "External";
           env.RADARR__APP__LAUNCHBROWSER.value = "false";
           env.RADARR__UPDATE__MECHANISM.value = "external";
+          # PostgreSQL in place of SQLite on /data, whose I/O at a node shutdown kept a thread in uninterruptible sleep
+          # past SIGKILL and held up the drain
+          env.RADARR__POSTGRES__HOST.value = "postgresql.postgresql";
+          env.RADARR__POSTGRES__USER.value = "radarr";
+          env.RADARR__POSTGRES__PASSWORD.valueFrom.secretKeyRef = {
+            name = "postgresql-password";
+            key = "password";
+          };
+          env.RADARR__POSTGRES__MAINDB.value = "radarr";
+          env.RADARR__POSTGRES__LOGDB.value = "radarr-log";
           # SIGTERM stops the ASP.NET Core host, which waits up to its shutdown timeout (30 s by default) for the
           # requests in flight. At a node shutdown the kubelet gives pods 20 s, so a request that hung had it killed and
           # held up the drain. The web host reads the host setting shutdownTimeoutSeconds from its ASPNETCORE_ variables
