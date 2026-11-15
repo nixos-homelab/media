@@ -73,6 +73,10 @@ in
           env.RADARR__AUTH__METHOD.value = "External";
           env.RADARR__APP__LAUNCHBROWSER.value = "false";
           env.RADARR__UPDATE__MECHANISM.value = "external";
+          # SIGTERM stops the ASP.NET Core host, which waits up to its shutdown timeout (30 s by default) for the
+          # requests in flight. At a node shutdown the kubelet gives pods 20 s, so a request that hung had it killed and
+          # held up the drain. The web host reads the host setting shutdownTimeoutSeconds from its ASPNETCORE_ variables
+          env.ASPNETCORE_SHUTDOWNTIMEOUTSECONDS.value = "10";
           # It doesn't answer for seconds at a time while busy (RSS sync, imports), and the 1 s default timeout
           # had it restarted many times a day
           livenessProbe = {
