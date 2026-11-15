@@ -11,7 +11,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf config.homelab.radarr.enable (
+  options.homelab.radarr.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes Radarr's metrics, and runs its exportarr sidecar.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (config.homelab.radarr.enable && config.homelab.radarr.metrics.enable) (
     lib.mkMerge [
       {
         homelab.alloy.monitors.radarr = {

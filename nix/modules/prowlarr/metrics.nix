@@ -11,7 +11,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf config.homelab.prowlarr.enable (
+  options.homelab.prowlarr.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes Prowlarr's metrics, and runs its exportarr sidecar.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (config.homelab.prowlarr.enable && config.homelab.prowlarr.metrics.enable) (
     lib.mkMerge [
       { homelab.alloy.monitors.prowlarr.podPort = exportarr.port; }
       (lib.mkIf config.homelab.alloy.enable {

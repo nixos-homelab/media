@@ -70,7 +70,13 @@ let
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
-  config = lib.mkIf cfg.enable (
+  options.homelab.rtorrent.metrics.enable = lib.mkOption {
+    description = "Whether Alloy scrapes rtorrent's metrics, and runs its rtorrent_exporter and SCGI bridge sidecars.";
+    type = lib.types.bool;
+    default = config.homelab.alloy.enable;
+    defaultText = lib.literalExpression "config.homelab.alloy.enable";
+  };
+  config = lib.mkIf (cfg.enable && cfg.metrics.enable) (
     lib.mkMerge [
       { homelab.alloy.monitors.rtorrent.podPort = metricsPort; }
       (lib.mkIf config.homelab.alloy.enable {
