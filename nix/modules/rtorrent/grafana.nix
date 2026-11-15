@@ -73,6 +73,30 @@ in
     '';
   };
   config = lib.mkIf cfg.grafana.enable {
+    homelab.grafana.home.tiles.rtorrent = {
+      group = "Media";
+      order = 404;
+      panel = g.stat {
+        title = "rTorrent traffic";
+        unit = "Bps";
+        links = [
+          {
+            title = "Media";
+            url = "/d/media/media?\${__url_time_range}";
+          }
+        ];
+        queries = [
+          (g.prom "rate(rtorrent_downloaded_bytes_total{${j}}[$__rate_interval])" {
+            instant = true;
+            legend = "down";
+          })
+          (g.prom "rate(rtorrent_uploaded_bytes_total{${j}}[$__rate_interval])" {
+            instant = true;
+            legend = "up";
+          })
+        ];
+      };
+    };
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";

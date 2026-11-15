@@ -67,6 +67,23 @@ in
     '';
   };
   config = lib.mkIf cfg.grafana.enable {
+    homelab.grafana.home.tiles.plex = {
+      group = "Media";
+      order = 403;
+      panel = g.stat {
+        title = "Plex streaming";
+        unit = "bps";
+        links = [
+          {
+            title = "Media";
+            url = "/d/media/media?\${__url_time_range}";
+          }
+        ];
+        queries = [
+          (g.prom "sum(rate(transmit_bytes_total{${j}}[$__rate_interval])) * 8" { instant = true; })
+        ];
+      };
+    };
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";

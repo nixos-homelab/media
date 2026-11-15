@@ -17,6 +17,17 @@ let
   };
 in
 {
+  home = g.stat {
+    title = "${title} missing";
+    decimals = 0;
+    links = [
+      {
+        title = "Media";
+        url = "/d/media/media?\${__url_time_range}";
+      }
+    ];
+    queries = [ (g.prom "${missing}{${j}}" { instant = true; }) ];
+  };
   overview = g.row { title = title; } (
     g.autoGrid { columns = 4; } (
       [
