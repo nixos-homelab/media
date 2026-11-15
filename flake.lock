@@ -431,6 +431,47 @@
         "type": "github"
       }
     },
+    "homelab-monitoring": {
+      "inputs": {
+        "docs": [
+          "docs"
+        ],
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "homelab-shared": [
+          "homelab-shared"
+        ],
+        "homelab-storage": [
+          "homelab-storage"
+        ],
+        "kube-generators": [
+          "kube-generators"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "setup-secrets": [
+          "setup-secrets"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794758058,
+        "narHash": "sha256-R0N76e2c5agew/8TyCusTSM3/G0Do3PyHfRYuqueS5E=",
+        "owner": "nixos-homelab",
+        "repo": "monitoring",
+        "rev": "40d5753bc16514906a0ba82ea8456c49ccca6c02",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos-homelab",
+        "repo": "monitoring",
+        "type": "github"
+      }
+    },
     "homelab-networking": {
       "inputs": {
         "docs": "docs_2",
@@ -1135,6 +1176,7 @@
       "inputs": {
         "docs": "docs",
         "flake-parts": "flake-parts",
+        "homelab-monitoring": "homelab-monitoring",
         "homelab-networking": "homelab-networking",
         "homelab-shared": "homelab-shared_2",
         "homelab-storage": "homelab-storage",
