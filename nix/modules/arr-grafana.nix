@@ -1,4 +1,4 @@
-# Rows for an *arr app's grafana.nix, from exportarr's metrics: health issues, what's missing, free space on its
+# Rows for an *arr app's grafana.nix, from exportarr's metrics: the health issues it reports, what's missing, free space on its
 # root folders. `app` is the module and namespace (sonarr, radarr); `missing` the exportarr metric of what it lacks
 { g }:
 {
@@ -12,7 +12,7 @@ let
   health = g.table {
     title = "Health issues";
     description = "${title}'s own health checks";
-    queries = [ (g.prom "${app}_system_health_issues{${j}} == 1" { instant = true; }) ];
+    queries = [ (g.prom "${app}_system_health_issues{${j}}" { instant = true; }) ];
     noValue = "None";
   };
 in
@@ -24,17 +24,7 @@ in
           title = "Health issues";
           decimals = 0;
           queries = [
-            (g.prom "count(${app}_system_health_issues{${j}} == 1) or vector(0)" { instant = true; })
-          ];
-          thresholds = [
-            {
-              value = null;
-              color = "green";
-            }
-            {
-              value = 1;
-              color = "orange";
-            }
+            (g.prom "count(${app}_system_health_issues{${j}}) or vector(0)" { instant = true; })
           ];
         })
         (g.stat {
