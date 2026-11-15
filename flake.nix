@@ -24,6 +24,7 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.setup-secrets.follows = "setup-secrets";
       inputs.kube-generators.follows = "kube-generators";
+      inputs.homelab-monitoring.follows = "homelab-monitoring";
     };
     homelab-storage = {
       url = "github:nixos-homelab/storage";

@@ -74,6 +74,7 @@ in
   ++ self.lib.importsApply [
     ./integration.nix
     ./homepage.nix
+    ./grafana.nix
     ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
