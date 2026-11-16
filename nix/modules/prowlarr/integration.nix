@@ -85,6 +85,8 @@ in
   config = {
     setup-secrets.destinations = [
       {
+        # As the manifests below: without an integration there is nothing to store
+        enable = integrations != [ ];
         logPrefix = "Prowlarr integration keys";
         requires = [ "PROWLARR_API_KEY" ] ++ (catAttrs "apiKeyVar" integrations);
         cmd = hllib.setup-secrets.mkScript pkgs ''

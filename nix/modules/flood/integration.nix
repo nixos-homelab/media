@@ -102,6 +102,8 @@ in
   config = {
     setup-secrets.destinations = [
       {
+        # As the manifests below: without an integration there is nothing to store
+        enable = integrations != [ ];
         logPrefix = "Flood integration keys";
         requires = (catAttrs "authApiKeyVar" integrations);
         cmd = hllib.setup-secrets.mkScript pkgs ''
