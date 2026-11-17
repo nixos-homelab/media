@@ -1,77 +1,11 @@
-# Prowlarr's rows: one on the Media dashboard, one on the Workload dashboard for its namespace
+# Prowlarr's panels on the Media dashboard and Home, and its row on the Workload dashboard
 { inputs, ... }:
 { config, lib, ... }:
 let
   g = inputs.homelab-monitoring.lib.grafana;
   cfg = config.homelab.prowlarr;
   j = ''job="prowlarr"'';
-  # Per indexer, side by side: { A = name; B = name; }
-  perIndexer = names: [
-    { id = "merge"; }
-    {
-      id = "organize";
-      options = {
-        excludeByName = {
-          Time = true;
-          job = true;
-          url = true;
-          namespace = true;
-          node = true;
-          instance = true;
-          pod = true;
-          container = true;
-          endpoint = true;
-          service = true;
-        };
-        renameByName = lib.mapAttrs' (ref: name: lib.nameValuePair "Value #${ref}" name) names;
-      };
-    }
-  ];
   rows = {
-    overview = g.row { title = "Prowlarr"; } (
-      g.autoGrid { columns = 2; } [
-        (g.stat {
-          title = "Indexers";
-          decimals = 0;
-          queries = [
-            (g.prom "prowlarr_indexer_total{${j}}" {
-              instant = true;
-              legend = "configured";
-            })
-            (g.prom "prowlarr_indexer_enabled_total{${j}}" {
-              instant = true;
-              legend = "enabled";
-            })
-            (g.prom "count(prowlarr_indexer_unavailable{${j}}) or vector(0)" {
-              instant = true;
-              legend = "unavailable";
-            })
-          ];
-        })
-        (g.table {
-          title = "By indexer";
-          description = "In the dashboard's time range; response time is Prowlarr's average";
-          queries = [
-            (g.prom "sum by (indexer) (increase(prowlarr_indexer_queries_total{${j}}[$__range]))" {
-              instant = true;
-            })
-            (g.prom "sum by (indexer) (increase(prowlarr_indexer_grabs_total{${j}}[$__range]))" {
-              instant = true;
-            })
-            (g.prom "sum by (indexer) (increase(prowlarr_indexer_failed_queries_total{${j}}[$__range]))" {
-              instant = true;
-            })
-            (g.prom "max by (indexer) (prowlarr_indexer_average_response_time_ms{${j}})" { instant = true; })
-          ];
-          transformations = perIndexer {
-            A = "queries";
-            B = "grabs";
-            C = "failed queries";
-            D = "response (ms)";
-          };
-        })
-      ]
-    );
     drilldown = g.row { title = "Prowlarr"; } (
       g.autoGrid { columns = 2; } [
         (g.timeseries {
@@ -95,7 +29,7 @@ let
         (g.table {
           title = "Unavailable";
           description = "The indexers Prowlarr reports as unavailable";
-          queries = [ (g.prom "prowlarr_indexer_unavailable{${j}}" { instant = true; }) ];
+          queries = [ (g.prom "max by (indexer) (prowlarr_indexer_unavailable{${j}})" { instant = true; }) ];
         })
       ]
     );
@@ -117,9 +51,60 @@ in
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";
-      rows.prowlarr = {
-        order = 620;
-        row = rows.overview;
+      panels = {
+        prowlarr-indexers = {
+          order = 14;
+          w = 3;
+          h = 4;
+          panel = g.ratio {
+            title = "Indexers up";
+            description = "Prowlarr's enabled indexers it can reach, of all enabled; an unavailable one is backing off after failures";
+            good = "sum(prowlarr_indexer_enabled_total{${j}}) - (count(prowlarr_indexer_unavailable{${j}}) or vector(0))";
+            all = "sum(prowlarr_indexer_enabled_total{${j}})";
+          };
+        };
+        prowlarr-grabs = {
+          order = 120;
+          w = 8;
+          h = 8;
+          panel = g.bargauge {
+            title = "Grabs by indexer";
+            description = "What each indexer delivered over the range: releases the *arrs grabbed from it";
+            decimals = 0;
+            queries = [
+              (g.prom "sum by (indexer) (increase(prowlarr_indexer_grabs_total{${j}}[$__range]))" {
+                instant = true;
+                legend = "{{indexer}}";
+              })
+            ];
+          };
+        };
+        prowlarr-failures = {
+          order = 121;
+          w = 8;
+          h = 8;
+          panel = g.timeseries {
+            title = "Failed queries";
+            description = "Queries that failed, per indexer, as bars: a run of them backs the indexer off, and the Indexers up tile drops";
+            decimals = 0;
+            noValue = "No failures";
+            legend = "right";
+            custom = {
+              drawStyle = "bars";
+              stacking.mode = "normal";
+              fillOpacity = 70;
+              lineWidth = 0;
+            };
+            queryOptions.maxDataPoints = 60;
+            queries = [
+              (g.prom "sum by (indexer) (increase(prowlarr_indexer_failed_queries_total{${j}}[$__interval])) > 0"
+                {
+                  legend = "{{indexer}}";
+                }
+              )
+            ];
+          };
+        };
       };
     };
     homelab.grafana.drilldown.rows.prowlarr = {

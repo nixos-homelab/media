@@ -1,4 +1,4 @@
-# Plex's rows: one on the Media dashboard, one on the Workload dashboard for its namespace
+# Plex's panels on the Media dashboard and Home, and its row on the Workload dashboard
 { inputs, ... }:
 { config, lib, ... }:
 let
@@ -6,37 +6,6 @@ let
   cfg = config.homelab.plex;
   j = ''job="plex"'';
   rows = {
-    overview = g.row { title = "Plex"; } (
-      g.autoGrid { columns = 3; } [
-        (g.timeseries {
-          title = "Streaming";
-          unit = "bps";
-          queries = [
-            (g.prom "sum(rate(transmit_bytes_total{${j}}[$__rate_interval])) * 8" { legend = "sent"; })
-          ];
-        })
-        (g.bargauge {
-          title = "Library size";
-          unit = "bytes";
-          queries = [
-            (g.prom "library_storage_total{${j}}" {
-              instant = true;
-              legend = "{{library}}";
-            })
-          ];
-        })
-        (g.stat {
-          title = "Library length";
-          unit = "ms";
-          queries = [
-            (g.prom "library_duration_total{${j}}" {
-              instant = true;
-              legend = "{{library}}";
-            })
-          ];
-        })
-      ]
-    );
     drilldown = g.row { title = "Plex"; } (
       g.autoGrid { columns = 2; } [
         (g.timeseries {
@@ -48,7 +17,11 @@ let
         })
         (g.table {
           title = "Server";
-          queries = [ (g.prom "server_info{${j}}" { instant = true; }) ];
+          queries = [
+            (g.prom "max by (server, version, platform, platform_version) (server_info{${j}})" {
+              instant = true;
+            })
+          ];
         })
       ]
     );
@@ -87,9 +60,81 @@ in
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";
-      rows.plex = {
-        order = 640;
-        row = rows.overview;
+      panels = {
+        plex-plays = {
+          order = 17;
+          w = 3;
+          h = 4;
+          panel = g.stat {
+            title = "Plex plays";
+            description = "Plays Plex counted in the hour before";
+            decimals = 0;
+            queries = [ (g.prom "sum(increase(plays_total{${j}}[1h])) or vector(0)" { }) ];
+          };
+        };
+        plex-streaming = {
+          order = 150;
+          w = 8;
+          h = 8;
+          panel = g.timeseries {
+            title = "Plex streaming";
+            description = "What Plex sends its players, and on the right axis, dashed, the time they played";
+            unit = "bps";
+            queries = [
+              (g.prom "sum(rate(transmit_bytes_total{${j}}[$__rate_interval])) * 8" { legend = "sent"; })
+              (g.prom "sum(rate(play_seconds_total{${j}}[$__rate_interval]))" { legend = "streams playing"; })
+            ];
+            overrides = [
+              {
+                matcher = {
+                  id = "byName";
+                  options = "streams playing";
+                };
+                properties = [
+                  {
+                    id = "unit";
+                    value = "short";
+                  }
+                  {
+                    id = "custom.axisPlacement";
+                    value = "right";
+                  }
+                  {
+                    id = "custom.lineStyle";
+                    value = {
+                      fill = "dash";
+                      dash = [
+                        8
+                        6
+                      ];
+                    };
+                  }
+                  {
+                    id = "custom.fillOpacity";
+                    value = 0;
+                  }
+                ];
+              }
+            ];
+          };
+        };
+        plex-libraries = {
+          order = 151;
+          w = 8;
+          h = 8;
+          panel = g.bargauge {
+            title = "Plex libraries";
+            description = "The size of each of Plex's libraries on disk";
+            unit = "bytes";
+            min = 0;
+            queries = [
+              (g.prom "library_storage_total{${j}}" {
+                instant = true;
+                legend = "{{library}}";
+              })
+            ];
+          };
+        };
       };
     };
     homelab.grafana.drilldown.rows.plex = {

@@ -1,4 +1,4 @@
-# rTorrent's rows: one on the Media dashboard, one on the Workload dashboard for its namespace
+# rTorrent's panels on the Media dashboard and Home, and its row on the Workload dashboard
 { inputs, ... }:
 { config, lib, ... }:
 let
@@ -6,55 +6,11 @@ let
   cfg = config.homelab.rtorrent;
   j = ''job="rtorrent"'';
   rows = {
-    overview = g.row { title = "rTorrent"; } (
-      g.autoGrid { columns = 3; } [
-        (g.timeseries {
-          title = "Traffic";
-          unit = "Bps";
-          description = "Downloaded above the line, uploaded below";
-          queries = [
-            (g.prom "rate(rtorrent_downloaded_bytes_total{${j}}[$__rate_interval])" { legend = "down"; })
-            (g.prom "-rate(rtorrent_uploaded_bytes_total{${j}}[$__rate_interval])" { legend = "up"; })
-          ];
-        })
-        (g.stat {
-          title = "Torrents";
-          decimals = 0;
-          queries = [
-            (g.prom ''sum by (view) (rtorrent_torrents_total{${j}, view=~"started|seeding|leeching|stopped"})''
-              {
-                instant = true;
-                legend = "{{view}}";
-              }
-            )
-          ];
-        })
-        (g.stat {
-          title = "Up";
-          queries = [ (g.prom "rtorrent_up{${j}}" { instant = true; }) ];
-          mappings = [
-            {
-              type = "value";
-              options = {
-                "0" = {
-                  text = "Down";
-                  color = "red";
-                };
-                "1" = {
-                  text = "Up";
-                  color = "green";
-                };
-              };
-            }
-          ];
-        })
-      ]
-    );
     drilldown = g.row { title = "rTorrent"; } (
       g.autoGrid { columns = 1; } [
         (g.table {
           title = "Torrents by label and view";
-          queries = [ (g.prom "rtorrent_torrents_total{${j}}" { instant = true; }) ];
+          queries = [ (g.prom "max by (label, view) (rtorrent_torrents_total{${j}})" { instant = true; }) ];
         })
       ]
     );
@@ -100,9 +56,65 @@ in
     homelab.grafana.overviews.media = {
       title = "Media";
       description = "The media stack: what's missing, downloading, streaming, and the apps' health";
-      rows.rtorrent = {
-        order = 650;
-        row = rows.overview;
+      panels = {
+        rtorrent-up = {
+          order = 16;
+          w = 3;
+          h = 4;
+          panel = g.stat {
+            title = "rTorrent";
+            description = "Whether the exporter reaches rTorrent, and the torrents it seeds";
+            queries = [ (g.prom "rtorrent_up{${j}}" { }) ];
+            mappings = [
+              {
+                type = "value";
+                options = {
+                  "0" = {
+                    text = "Down";
+                    color = "red";
+                  };
+                  "1" = {
+                    text = "Up";
+                    color = "green";
+                  };
+                };
+              }
+            ];
+          };
+        };
+        rtorrent-traffic = {
+          order = 140;
+          w = 8;
+          h = 8;
+          panel = g.timeseries {
+            title = "rTorrent traffic";
+            description = "Downloaded above the line, uploaded (seeding) below";
+            unit = "Bps";
+            queries = [
+              (g.prom "rate(rtorrent_downloaded_bytes_total{${j}}[$__rate_interval])" { legend = "down"; })
+              (g.prom "-rate(rtorrent_uploaded_bytes_total{${j}}[$__rate_interval])" { legend = "up"; })
+            ];
+          };
+        };
+        rtorrent-torrents = {
+          order = 141;
+          w = 8;
+          h = 8;
+          panel = g.timeseries {
+            title = "Torrents";
+            description = "Torrents by what they're doing, stacked: leeching (downloading), seeding, and stopped";
+            decimals = 0;
+            custom = {
+              stacking.mode = "normal";
+              fillOpacity = 50;
+            };
+            queries = [
+              (g.prom ''sum by (view) (rtorrent_torrents_total{${j}, view=~"seeding|leeching|stopped"})'' {
+                legend = "{{view}}";
+              })
+            ];
+          };
+        };
       };
     };
     homelab.grafana.drilldown.rows.rtorrent = {

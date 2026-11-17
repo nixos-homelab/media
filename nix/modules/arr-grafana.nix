@@ -1,64 +1,134 @@
-# Rows for an *arr app's grafana.nix, from exportarr's metrics: the health issues it reports, what's missing, free space on its
-# root folders. `app` is the module and namespace (sonarr, radarr); `missing` the exportarr metric of what it lacks
-{ g }:
+# Panels for an *arr app's grafana.nix, from exportarr's metrics: how much of the library it has, what's missing, its
+# health checks, the free space on its root folders. `app` is the module and namespace (sonarr, radarr); `missing`
+# and `downloaded` the exportarr metrics of what it lacks and has, `item` what they count ("episodes"); `order` where
+# its panels go on the Media dashboard
+{ g, lib }:
 {
   app,
   title,
   missing,
-  wanted ? null,
+  downloaded,
+  item,
+  order,
 }:
 let
   j = ''job="${app}"'';
-  health = g.table {
-    title = "Health issues";
-    description = "${title}'s own health checks";
-    queries = [ (g.prom "${app}_system_health_issues{${j}}" { instant = true; }) ];
-    noValue = "None";
+  toWorkload = [
+    {
+      title = title;
+      url = "/d/workload/workload?var-workload=${app}&\${__url_time_range}";
+    }
+  ];
+  library = {
+    title = lib.toUpper (lib.substring 0 1 item) + lib.substring 1 (-1) item;
+    description = "The monitored ${item} ${title} has, of all it wants (has and missing)";
+    good = "sum(${downloaded}{${j}})";
+    all = "sum(${downloaded}{${j}}) + sum(${missing}{${j}})";
+    # A few missing is normal: orange under 95 %, red under 75 %
+    warn = 0.95;
+    crit = 0.75;
+    links = toWorkload;
+  };
+  issues = {
+    title = "${title} issues";
+    description = "Problems ${title}'s own health checks report (an indexer down, a root folder missing, an update waiting); its Workload page lists them. Orange from 1, red from 3";
+    decimals = 0;
+    levels = g.levels {
+      warn = 1;
+      crit = 3;
+    };
+    links = toWorkload;
+    queries = [ (g.prom "count(${app}_system_health_issues{${j}}) or vector(0)" { }) ];
   };
 in
 {
-  home = g.stat {
-    title = "${title} missing";
-    decimals = 0;
-    links = [
-      {
-        title = "Media";
-        url = "/d/media/media?\${__url_time_range}";
-      }
-    ];
-    queries = [ (g.prom "${missing}{${j}}" { instant = true; }) ];
+  home = g.ratio (
+    library
+    // {
+      links = [
+        {
+          title = "Media";
+          url = "/d/media/media?\${__url_time_range}";
+        }
+      ];
+    }
+  );
+  # Two tiles for the Media dashboard's strip, at `order` and one after, and the library over time with the panels
+  tiles = {
+    "${app}-library" = {
+      inherit order;
+      w = 3;
+      h = 4;
+      panel = g.ratio (removeAttrs library [ "links" ]);
+    };
+    "${app}-health" = {
+      order = order + 1;
+      w = 3;
+      h = 4;
+      panel = g.stat (removeAttrs issues [ "links" ]);
+    };
   };
-  overview = g.row { title = title; } (
-    g.autoGrid { columns = 4; } (
-      [
-        (g.stat {
+  panels = {
+    "${app}-activity" = {
+      order = 100 + order;
+      w = 8;
+      h = 8;
+      panel = g.timeseries {
+        title = "${title} activity";
+        description = "Events in ${title}'s history (releases grabbed, imported, deleted, failed) as bars; the library tile says how much of it is there";
+        decimals = 0;
+        noValue = "Nothing happened";
+        custom = {
+          drawStyle = "bars";
+          fillOpacity = 70;
+          lineWidth = 0;
+        };
+        queryOptions.maxDataPoints = 60;
+        queries = [
+          (g.prom "increase(${app}_history_total{${j}}[$__interval]) > 0" { legend = "events"; })
+        ];
+      };
+    };
+  };
+  drilldown = g.row { title = title; } (
+    g.pack [
+      {
+        w = 4;
+        h = 4;
+        panel = g.ratio library;
+      }
+      {
+        w = 4;
+        h = 4;
+        panel = g.stat issues;
+      }
+      {
+        w = 16;
+        h = 8;
+        panel = g.table {
           title = "Health issues";
-          decimals = 0;
+          description = "${title}'s own health checks, as it words them";
+          noValue = "None";
           queries = [
-            (g.prom "count(${app}_system_health_issues{${j}}) or vector(0)" { instant = true; })
+            (g.prom "max by (source, type, message) (${app}_system_health_issues{${j}})" { instant = true; })
           ];
-        })
-        (g.stat {
-          title = "Missing";
-          decimals = 0;
-          queries = [ (g.prom "${missing}{${j}}" { instant = true; }) ];
-        })
-      ]
-      ++ (
-        if wanted == null then
-          [ ]
-        else
-          [
-            (g.stat {
-              title = "Wanted";
-              decimals = 0;
-              queries = [ (g.prom "${wanted}{${j}}" { instant = true; }) ];
-            })
-          ]
-      )
-      ++ [
-        (g.bargauge {
+          transformations = [
+            {
+              id = "organize";
+              options.excludeByName = {
+                Time = true;
+                Value = true;
+              };
+            }
+          ];
+        };
+      }
+      {
+        w = 8;
+        h = 4;
+        panel = g.bargauge {
           title = "Free on root folders";
+          description = "The space left where ${title} puts the library";
           unit = "bytes";
           queries = [
             (g.prom "${app}_rootfolder_freespace_bytes{${j}}" {
@@ -66,18 +136,8 @@ in
               legend = "{{path}}";
             })
           ];
-        })
-      ]
-    )
-  );
-  drilldown = g.row { title = title; } (
-    g.autoGrid { columns = 2; } [
-      health
-      (g.timeseries {
-        title = "Missing over time";
-        decimals = 0;
-        queries = [ (g.prom "${missing}{${j}}" { legend = "missing"; }) ];
-      })
+        };
+      }
     ]
   );
 }
