@@ -36,7 +36,7 @@
                 ''"privacy": "normal"''
                 "}"
               ];
-              level = "unknown";
+              level = "info";
               program = "integrate-radarr";
             }
           ];

@@ -28,7 +28,7 @@
             }
             {
               message = "unknown websocket event name: transcodeSession.start";
-              level = "unknown";
+              level = "info";
             }
           ];
         }
