@@ -42,6 +42,8 @@ in
     inputs.homelab-storage.nixosModules.postgresql
   ]
   ++ self.lib.importsApply [
+    ./logs.nix
+    ../integration-logs.nix
     ./homepage.nix
     ./integration.nix
     ./grafana.nix

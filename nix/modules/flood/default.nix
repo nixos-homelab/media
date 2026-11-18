@@ -32,6 +32,8 @@ in
     debug = lib.mkEnableOption "debug mode";
   };
   imports = self.lib.importsApply [
+    ./logs.nix
+    ../integration-logs.nix
     ./homepage.nix
     ./integration.nix
   ];
