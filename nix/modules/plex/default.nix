@@ -72,6 +72,8 @@ in
     inputs.setup-secrets.nixosModules.default
   ]
   ++ self.lib.importsApply [
+    ./logs.nix
+    ../integration-logs.nix
     ./integration.nix
     ./homepage.nix
     ./grafana.nix

@@ -62,6 +62,8 @@ in
     inputs.homelab-networking.nixosModules.privacy-vpn
   ]
   ++ self.lib.importsApply [
+    ./logs.nix
+    ../integration-logs.nix
     ./integration.nix
     ./homepage.nix
     ./grafana.nix

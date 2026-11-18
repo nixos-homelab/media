@@ -94,60 +94,66 @@
         };
         perSystem =
           { pkgs, system, ... }:
+          let
+            nfs = path: {
+              server = "nas.example.org";
+              inherit path;
+            };
+            # Every module of this flake on
+            testModules = builtins.attrValues self.nixosModules ++ [
+              {
+                nixpkgs.config.allowUnfreePredicate =
+                  pkg:
+                  builtins.elem (inputs.nixpkgs.lib.getName pkg) [
+                    "plexmediaserver"
+                    "unrar"
+                  ];
+                homelab = {
+                  flood.enable = true;
+                  plex = {
+                    enable = true;
+                    volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
+                  };
+                  prowlarr.enable = true;
+                  radarr = {
+                    enable = true;
+                    volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
+                  };
+                  rtorrent = {
+                    enable = true;
+                    downloadsVolume.nfs = nfs "/mnt/torrents";
+                  };
+                  sabnzbd = {
+                    enable = true;
+                    downloadsVolume.nfs = nfs "/mnt/usenet";
+                  };
+                  sonarr = {
+                    enable = true;
+                    volumes."/mnt/media/tvshows".nfs = nfs "/mnt/media/tvshows";
+                  };
+                  homepage.enable = true;
+                  postgresql.enable = true;
+                  # Evaluates the metrics parts of the modules, off with Alloy
+                  alloy.enable = true;
+                };
+              }
+            ];
+          in
           {
             # Dead Nix code. Pattern names stay: modules take { config, lib, pkgs, ... } whether they use them or not
             checks.deadnix = pkgs.runCommand "deadnix" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
               deadnix --fail --no-lambda-pattern-names ${self}
               touch $out
             '';
-            checks.manifests =
-              let
-                nfs = path: {
-                  server = "nas.example.org";
-                  inherit path;
-                };
-              in
-              inputs.homelab-shared.lib.checks.manifests {
-                inherit pkgs;
-                modules = builtins.attrValues self.nixosModules ++ [
-                  {
-                    nixpkgs.config.allowUnfreePredicate =
-                      pkg:
-                      builtins.elem (inputs.nixpkgs.lib.getName pkg) [
-                        "plexmediaserver"
-                        "unrar"
-                      ];
-                    homelab = {
-                      flood.enable = true;
-                      plex = {
-                        enable = true;
-                        volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
-                      };
-                      prowlarr.enable = true;
-                      radarr = {
-                        enable = true;
-                        volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
-                      };
-                      rtorrent = {
-                        enable = true;
-                        downloadsVolume.nfs = nfs "/mnt/torrents";
-                      };
-                      sabnzbd = {
-                        enable = true;
-                        downloadsVolume.nfs = nfs "/mnt/usenet";
-                      };
-                      sonarr = {
-                        enable = true;
-                        volumes."/mnt/media/tvshows".nfs = nfs "/mnt/media/tvshows";
-                      };
-                      homepage.enable = true;
-                      postgresql.enable = true;
-                      # Evaluates the metrics parts of the modules, off with Alloy
-                      alloy.enable = true;
-                    };
-                  }
-                ];
-              };
+            checks.manifests = inputs.homelab-shared.lib.checks.manifests {
+              inherit pkgs;
+              modules = testModules;
+            };
+            # The parsers of this flake's workloads on their examples, through the pinned Alloy and Loki
+            checks.logs = inputs.homelab-monitoring.lib.logs.check {
+              inherit pkgs;
+              modules = testModules;
+            };
             packages = {
               lib-docs = inputs.docs.lib.docs.lib {
                 inherit pkgs;
