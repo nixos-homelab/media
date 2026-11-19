@@ -19,6 +19,8 @@ let
     copyToRoot = [
       flood
       pkgs.mediainfo
+      # df, for the disk usage Flood shows
+      pkgs.coreutils
     ]
     ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Entrypoint = [

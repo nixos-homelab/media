@@ -42,13 +42,13 @@ let
           sonarr = {
             apiEndpoint = "http://sonarr.sonarr:8989/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
-              fields.category = "tv";
+              fields.tvCategory = "tv";
             } cfg.integrations.sonarr.settings;
           };
           radarr = {
             apiEndpoint = "http://radarr.radarr:7878/api/v3/downloadclient";
             settings = lib.recursiveUpdate {
-              fields.category = "movies";
+              fields.movieCategory = "movies";
             } cfg.integrations.radarr.settings;
           };
           prowlarr = {
@@ -60,6 +60,12 @@ let
         }
       );
   toApiKeyVar = name: "${lib.toUpper name}_API_KEY";
+  # The field each app keeps its SABnzbd category in
+  categoryFields = {
+    sonarr = "tvCategory";
+    radarr = "movieCategory";
+    prowlarr = "category";
+  };
 in
 {
   options.homelab.sabnzbd.integrations = {
@@ -93,8 +99,8 @@ in
       enable = lib.mkOption {
         description = "Whether to integrate SABNzbd with Prowlarr";
         type = lib.types.bool;
-        default = config.homelab.sabnzbd.enable && config.homelab.sonarr.enable;
-        defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.sonarr.enable";
+        default = config.homelab.sabnzbd.enable && config.homelab.prowlarr.enable;
+        defaultText = lib.literalExpression "config.homelab.sabnzbd.enable && config.homelab.prowlarr.enable";
       };
       settings = lib.mkOption {
         description = "Settings of the integration, the fields property will be converted from a attrSet to a name value pair array";
@@ -122,28 +128,34 @@ in
     # In the manifest of sabnzbd, as before
     homelab.kubernetes = lib.mkIf (integrations != [ ]) {
       submodules.instances.sabnzbd.config.submodules.instances = lib.listToAttrs (
-        map (spec: {
-          name = "integrate-${spec.name}";
-          value = {
-            submodule = "script";
-            args = {
-              # The client refuses a category SABnzbd doesn't have, and a new SABnzbd has none of these. set_config
-              # creates it, or leaves an existing one as it is
-              script = ''
-                curl -sf "http://sabnzbd.sabnzbd:8080/api?mode=set_config&section=categories&name=${spec.settings.fields.category}&output=json&apikey=''${SABNZBD_API_KEY:?}" >/dev/null || {
-                  echo "Creating the SABnzbd category ${spec.settings.fields.category} failed" >&2
-                  exit 1
-                }
-              ''
-              + self.lib.integration.mkArrStackIntegrationScript spec;
-              allowEgress = [
-                spec.name
-                "sabnzbd"
-              ];
-              container.envFrom = [ { secretRef.name = "api-keys"; } ];
+        map (
+          spec:
+          let
+            category = spec.settings.fields.${categoryFields.${spec.name}};
+          in
+          {
+            name = "integrate-${spec.name}";
+            value = {
+              submodule = "script";
+              args = {
+                # The client refuses a category SABnzbd doesn't have, and a new SABnzbd has none of these. set_config
+                # creates it, or leaves an existing one as it is
+                script = ''
+                  curl -sf "http://sabnzbd.sabnzbd:8080/api?mode=set_config&section=categories&name=${category}&output=json&apikey=''${SABNZBD_API_KEY:?}" >/dev/null || {
+                    echo "Creating the SABnzbd category ${category} failed" >&2
+                    exit 1
+                  }
+                ''
+                + self.lib.integration.mkArrStackIntegrationScript spec;
+                allowEgress = [
+                  spec.name
+                  "sabnzbd"
+                ];
+                container.envFrom = [ { secretRef.name = "api-keys"; } ];
+              };
             };
-          };
-        }) integrations
+          }
+        ) integrations
       );
     };
   };
