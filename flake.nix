@@ -82,6 +82,7 @@
             integration = import ./nix/lib/integration.nix { inherit lib inputs; };
           };
           nixosModules = {
+            flaresolverr = importApply ./nix/modules/flaresolverr { inherit self inputs; };
             flood = importApply ./nix/modules/flood { inherit self inputs; };
             homepage = importApply ./nix/modules/homepage { inherit self inputs; };
             plex = importApply ./nix/modules/plex { inherit self inputs; };
@@ -109,6 +110,7 @@
                     "unrar"
                   ];
                 homelab = {
+                  flaresolverr.enable = true;
                   flood.enable = true;
                   plex = {
                     enable = true;
@@ -169,6 +171,7 @@
                 repoPath = toString self;
                 repoLinkPrefix = "https://github.com/nixos-homelab/media/blob/main";
                 prefixGroups = {
+                  flaresolverr = [ "homelab.flaresolverr" ];
                   flood = [
                     "homelab.flood"
                     "homelab.homepage.integrations.flood"
