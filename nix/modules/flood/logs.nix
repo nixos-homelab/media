@@ -29,6 +29,8 @@ in
       };
       pods.flood = {
         format = "flood";
+        # pino's two lines per HTTP request: the request is in their fields
+        demote.requests.expression = "incoming request|request completed";
         examples = [
           {
             lines = [
@@ -40,7 +42,8 @@ in
             expect = [
               {
                 message = "request completed";
-                level = "info";
+                # Demoted
+                level = "debug";
                 fields = {
                   component = "flood:web-server";
                   request_id = "req-697";
