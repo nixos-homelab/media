@@ -29,6 +29,12 @@ in
       };
       pods.flood = {
         format = "flood";
+        # pino's two lines per HTTP request: the request is in their fields
+        demote = {
+          requests.expression = "incoming request|request completed";
+          # morgan's line for the kubelet's liveness and readiness probes, each every 10 s
+          probes.expression = "GET / 200 [\\d.]+ ms - \\d+";
+        };
         examples = [
           {
             lines = [
@@ -40,7 +46,8 @@ in
             expect = [
               {
                 message = "request completed";
-                level = "info";
+                # Demoted
+                level = "debug";
                 fields = {
                   component = "flood:web-server";
                   request_id = "req-697";
@@ -49,7 +56,8 @@ in
               }
               {
                 message = "GET / 200 0.060 ms - 873";
-                level = "info";
+                # Demoted
+                level = "debug";
                 fields = {
                   method = "GET";
                   path = "/";
