@@ -1,4 +1,4 @@
-# Prowlarr's panels on the Media dashboard and Home, and its row on the Workload dashboard
+# Prowlarr's panels on the Media dashboard, and its row on the Workload dashboard
 { inputs, ... }:
 { config, lib, ... }:
 let

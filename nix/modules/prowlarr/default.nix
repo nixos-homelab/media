@@ -42,6 +42,7 @@ in
     inputs.homelab-storage.nixosModules.postgresql
   ]
   ++ self.lib.importsApply [
+    ./home-area.nix
     ./logs.nix
     ../integration-logs.nix
     ./homepage.nix

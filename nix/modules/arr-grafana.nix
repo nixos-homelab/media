@@ -42,17 +42,55 @@ let
   };
 in
 {
-  home = g.ratio (
-    library
-    // {
-      links = [
+  # The Home dashboard's library graph, which the *arr apps share: a bar each
+  home = {
+    title = "Library completeness";
+    description = "Downloaded / monitored items of each *arr app (has and missing)";
+    type = "bargauge";
+    unit = "percentunit";
+    min = 0;
+    max = 1;
+    decimals = 1;
+    options = {
+      displayMode = "lcd";
+      namePlacement = "top";
+      sizing = "auto";
+    };
+    custom = { };
+    order = 212;
+    w = 6;
+    h = 4;
+    links = [
+      {
+        title = "Media";
+        url = "/d/media/media?\${__url_time_range}";
+      }
+    ];
+    series.${app} = {
+      inherit order;
+      query = g.prom (g.ratioExpr library.good library.all) {
+        legend = "${library.title} {{good}}/{{all}}";
+        instant = true;
+      };
+      overrides = [
         {
-          title = "Media";
-          url = "/d/media/media?\${__url_time_range}";
+          matcher = {
+            id = "byRegexp";
+            options = "${library.title} .*";
+          };
+          properties = [
+            {
+              id = "color";
+              value = {
+                mode = "fixed";
+                fixedColor = "purple";
+              };
+            }
+          ];
         }
       ];
-    }
-  );
+    };
+  };
   # Two tiles for the Media dashboard's strip, at `order` and one after, and the library over time with the panels
   tiles = {
     "${app}-library" = {
