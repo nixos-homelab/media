@@ -9,17 +9,24 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.flaresolverr;
+  # Without a font configuration the Chromium renderer crashes as it starts
+  fontsConf = pkgs.makeFontsConf { fontDirectories = [ pkgs.dejavu_fonts ]; };
   image = pkgs.dockerTools.buildImage {
     name = "cluster.local/flaresolverr";
     copyToRoot = [
       pkgs.flaresolverr
       pkgs.cacert
+      # At /etc/fonts/fonts.conf, which also puts it and the fonts in the image
+      (pkgs.runCommand "fonts-conf" { }
+        "mkdir -p $out/etc/fonts && ln -s ${fontsConf} $out/etc/fonts/fonts.conf"
+      )
     ]
     ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
       # Chromium and Xvfb write their profile, locks and sockets here
       "HOME=/tmp"
+      "FONTCONFIG_FILE=${fontsConf}"
     ];
     config.Entrypoint = [ (lib.getExe pkgs.flaresolverr) ];
   };
