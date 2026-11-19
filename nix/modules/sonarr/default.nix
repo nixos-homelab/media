@@ -50,6 +50,10 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-storage.nixosModules.postgresql
+    (import ../servarr-config.nix { inherit inputs; } {
+      app = "sonarr";
+      port = 8989;
+    })
   ]
   ++ self.lib.importsApply [
     ./logs.nix

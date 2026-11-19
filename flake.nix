@@ -118,6 +118,8 @@
                   radarr = {
                     enable = true;
                     volumes."/mnt/media/movies".nfs = nfs "/mnt/media/movies";
+                    rootFolders = [ "/mnt/media/movies" ];
+                    mediaManagement.importExtraFiles = true;
                   };
                   rtorrent = {
                     enable = true;
@@ -130,6 +132,8 @@
                   sonarr = {
                     enable = true;
                     volumes."/mnt/media/tvshows".nfs = nfs "/mnt/media/tvshows";
+                    rootFolders = [ "/mnt/media/tvshows" ];
+                    naming.renameEpisodes = false;
                   };
                   homepage.enable = true;
                   postgresql.enable = true;
