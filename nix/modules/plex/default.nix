@@ -72,6 +72,7 @@ in
     inputs.setup-secrets.nixosModules.default
   ]
   ++ self.lib.importsApply [
+    ./home-area.nix
     ./logs.nix
     ../integration-logs.nix
     ./integration.nix

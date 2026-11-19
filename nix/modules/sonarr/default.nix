@@ -56,6 +56,7 @@ in
     })
   ]
   ++ self.lib.importsApply [
+    ./home-area.nix
     ./logs.nix
     ./homepage.nix
     ./grafana.nix
