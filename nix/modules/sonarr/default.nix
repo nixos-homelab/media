@@ -77,9 +77,12 @@ in
         message = "Sonarr depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
       }
     ];
-    setup-secrets.sources.SONARR_API_KEY = {
+    setup-secrets.sources.SONARR_API_KEY = hllib.setup-secrets.kubeExecSource pkgs {
       description = "Sonarr API Key";
-      cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n sonarr -c sonarr deploy/sonarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
+      namespace = "sonarr";
+      workload = "deploy/sonarr";
+      container = "sonarr";
+      command = "xq -q 'Config>ApiKey' /data/config.xml";
     };
     homelab.cluster.backup.volumes.sonarr.sonarr = [ "/Backups" ];
     homelab.cluster.images = [ image ];

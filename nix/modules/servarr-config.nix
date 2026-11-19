@@ -90,14 +90,12 @@ in
   };
   config = lib.mkIf (cfg.enable && configured) {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "${title} configuration key";
-        requires = [ apiKeyVar ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret ${app} ${app}-api-key \
-            ${apiKeyVar} "''${${apiKeyVar}:?}"
-        '';
-      }
+        namespace = app;
+        name = "${app}-api-key";
+        data.${apiKeyVar} = apiKeyVar;
+      })
     ];
     homelab.kubernetes.submodules.instances.${app}.config.submodules.instances.configure = {
       submodule = "script";

@@ -25,11 +25,12 @@ in
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "Homepage (PLEX_API_KEY)";
-        requires = [ "PLEX_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage plex-api-key HOMEPAGE_VAR_PLEX_API_KEY "''${PLEX_API_KEY:?}"'';
-      }
+        namespace = "homepage";
+        name = "plex-api-key";
+        data.HOMEPAGE_VAR_PLEX_API_KEY = "PLEX_API_KEY";
+      })
     ];
     homelab.homepage = {
       sections.Media.enable = lib.mkDefault true;

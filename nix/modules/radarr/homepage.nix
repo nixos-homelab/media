@@ -25,11 +25,12 @@ in
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "Homepage (RADARR_API_KEY)";
-        requires = [ "RADARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage radarr-api-key HOMEPAGE_VAR_RADARR_API_KEY "''${RADARR_API_KEY:?}"'';
-      }
+        namespace = "homepage";
+        name = "radarr-api-key";
+        data.HOMEPAGE_VAR_RADARR_API_KEY = "RADARR_API_KEY";
+      })
     ];
     homelab.homepage = {
       sections.Media.enable = lib.mkDefault true;
