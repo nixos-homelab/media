@@ -30,10 +30,15 @@ let
     api() {
       local method=$1 path=$2
       shift 2
-      curl -sfX "$method" "http://prowlarr.prowlarr:9696/api/v1/$path" \
+      curl -sSX "$method" --fail-with-body "http://prowlarr.prowlarr:9696/api/v1/$path" \
         -H 'Content-Type: application/json' \
         -H "X-Api-Key: ''${PROWLARR_API_KEY:?}" "$@"
     }
+    # Prowlarr tests the proxy as it saves it, so FlareSolverr has to answer first. It starts Chromium before it serves
+    for _ in $(seq 60); do
+      curl -sf http://flaresolverr.flaresolverr:8191/health >/dev/null && break
+      sleep 5
+    done
     if ! tag=$(api GET tag | jq -re --arg label ${lib.escapeShellArg cfg.tag} '.[] | select(.label == $label) | .id'); then
       tag=$(api POST tag -d "$(jq -n --arg label ${lib.escapeShellArg cfg.tag} '{label: $label}')" | jq -re .id)
       echo "Created the Prowlarr tag ${cfg.tag}" >&2
@@ -87,7 +92,10 @@ in
         submodule = "script";
         args = {
           inherit script;
-          allowEgress = [ "prowlarr" ];
+          allowEgress = [
+            "prowlarr"
+            "flaresolverr"
+          ];
           container.envFrom = [ { secretRef.name = "api-keys"; } ];
         };
       };
