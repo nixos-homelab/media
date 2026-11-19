@@ -84,17 +84,17 @@ in
   };
   config = {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         # As the manifests below: without an integration there is nothing to store
         enable = integrations != [ ];
         logPrefix = "Prowlarr integration keys";
-        requires = [ "PROWLARR_API_KEY" ] ++ (catAttrs "apiKeyVar" integrations);
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret prowlarr api-keys \
-            PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}" \
-            ${lib.join " \\\n  " (map (key: ''${key} "''${${key}:?}"'') (catAttrs "apiKeyVar" integrations))}
-        '';
-      }
+        namespace = "prowlarr";
+        name = "api-keys";
+        data = {
+          PROWLARR_API_KEY = "PROWLARR_API_KEY";
+        }
+        // lib.genAttrs (catAttrs "apiKeyVar" integrations) (key: key);
+      })
     ];
     # In the manifest of prowlarr, as before
     homelab.kubernetes = lib.mkIf (integrations != [ ]) {

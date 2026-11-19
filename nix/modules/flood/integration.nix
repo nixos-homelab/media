@@ -101,18 +101,14 @@ in
   };
   config = {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         # As the manifests below: without an integration there is nothing to store
         enable = integrations != [ ];
         logPrefix = "Flood integration keys";
-        requires = (catAttrs "authApiKeyVar" integrations);
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret flood api-keys \
-            ${lib.join " \\\n  " (
-              map (key: ''${key} "''${${key}:?}"'') (catAttrs "authApiKeyVar" integrations)
-            )}
-        '';
-      }
+        namespace = "flood";
+        name = "api-keys";
+        data = lib.genAttrs (catAttrs "authApiKeyVar" integrations) (key: key);
+      })
     ];
     # In the manifest of flood, as before
     homelab.kubernetes = lib.mkIf (integrations != [ ]) {

@@ -72,9 +72,12 @@ in
         message = "Radarr depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
       }
     ];
-    setup-secrets.sources.RADARR_API_KEY = {
+    setup-secrets.sources.RADARR_API_KEY = hllib.setup-secrets.kubeExecSource pkgs {
       description = "Radarr API Key";
-      cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n radarr -c radarr deploy/radarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
+      namespace = "radarr";
+      workload = "deploy/radarr";
+      container = "radarr";
+      command = "xq -q 'Config>ApiKey' /data/config.xml";
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
     homelab.cluster.images = [ image ];

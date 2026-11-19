@@ -25,11 +25,12 @@ in
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "Homepage (SABNZBD_API_KEY)";
-        requires = [ "SABNZBD_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage sabnzbd-api-key HOMEPAGE_VAR_SABNZBD_API_KEY "''${SABNZBD_API_KEY:?}"'';
-      }
+        namespace = "homepage";
+        name = "sabnzbd-api-key";
+        data.HOMEPAGE_VAR_SABNZBD_API_KEY = "SABNZBD_API_KEY";
+      })
     ];
     homelab.homepage = {
       sections.Media.enable = lib.mkDefault true;

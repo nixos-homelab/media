@@ -78,14 +78,12 @@ in
   };
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "FlareSolverr integration key";
-        requires = [ "PROWLARR_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret flaresolverr api-keys \
-            PROWLARR_API_KEY "''${PROWLARR_API_KEY:?}"
-        '';
-      }
+        namespace = "flaresolverr";
+        name = "api-keys";
+        data.PROWLARR_API_KEY = "PROWLARR_API_KEY";
+      })
     ];
     homelab.kubernetes.submodules.instances.flaresolverr.config.submodules.instances.integrate-prowlarr =
       {

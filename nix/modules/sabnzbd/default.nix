@@ -71,12 +71,13 @@ in
     ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
-    setup-secrets.sources.SABNZBD_API_KEY = {
+    setup-secrets.sources.SABNZBD_API_KEY = hllib.setup-secrets.kubeExecSource pkgs {
       description = "SABnzbd API Key";
-      cmd = hllib.setup-secrets.mkScript pkgs ''
-        ${lib.getExe pkgs.kubectl} exec -n sabnzbd -c sabnzbd deploy/sabnzbd -- ${lib.getExe pkgs.gnugrep} '^api_key = ' "/data/sabnzbd.ini" | \
-          cut -d ' ' -f3
-      '';
+      namespace = "sabnzbd";
+      workload = "deploy/sabnzbd";
+      container = "sabnzbd";
+      # grep runs in the container (the image has the closure), cut on the host
+      command = "${lib.getExe pkgs.gnugrep} '^api_key = ' /data/sabnzbd.ini | cut -d ' ' -f3";
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     homelab.cluster.images = [ image ];

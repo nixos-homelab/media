@@ -81,24 +81,22 @@ in
     ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
-    setup-secrets.sources.PLEX_API_KEY = {
+    setup-secrets.sources.PLEX_API_KEY = hllib.setup-secrets.kubeExecSource pkgs {
       description = "Plex API Key";
-      cmd = hllib.setup-secrets.mkScript pkgs ''
-        kubectl exec -n plex -c plex deploy/plex -- \
-          xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"
-      '';
+      namespace = "plex";
+      workload = "deploy/plex";
+      container = "plex";
+      command = ''xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"'';
     };
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
     homelab.cluster.images = [ image ];
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "Plex API key";
-        requires = [ "PLEX_API_KEY" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret plex plex-api-key \
-            PLEX_API_KEY "''${PLEX_API_KEY:?}"
-        '';
-      }
+        namespace = "plex";
+        name = "plex-api-key";
+        data.PLEX_API_KEY = "PLEX_API_KEY";
+      })
     ];
     homelab.kubernetes.submodules.instances.plex =
       let

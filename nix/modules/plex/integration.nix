@@ -205,19 +205,17 @@ in
       ) libraries
     );
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         # As the manifests below: without an integration there is nothing to store
         enable = integrations != [ ];
         logPrefix = "Plex integration keys";
-        requires = [ "PLEX_API_KEY" ] ++ (catAttrs "authApiKeyVar" integrations);
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          setKubeSecret plex api-keys \
-            PLEX_API_KEY "''${PLEX_API_KEY:?}" \
-            ${lib.join " \\\n  " (
-              map (key: ''${key} "''${${key}:?}"'') (catAttrs "authApiKeyVar" integrations)
-            )}
-        '';
-      }
+        namespace = "plex";
+        name = "api-keys";
+        data = {
+          PLEX_API_KEY = "PLEX_API_KEY";
+        }
+        // lib.genAttrs (catAttrs "authApiKeyVar" integrations) (key: key);
+      })
     ];
     # In the manifest of plex, as before
     homelab.kubernetes = lib.mkIf (integrations != [ ]) {

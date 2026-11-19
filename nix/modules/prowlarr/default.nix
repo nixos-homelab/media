@@ -65,9 +65,12 @@ in
         message = "Prowlarr depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
       }
     ];
-    setup-secrets.sources.PROWLARR_API_KEY = {
+    setup-secrets.sources.PROWLARR_API_KEY = hllib.setup-secrets.kubeExecSource pkgs {
       description = "Prowlarr API Key";
-      cmd = hllib.setup-secrets.mkScript pkgs ''kubectl exec -n prowlarr -c prowlarr deploy/prowlarr -- xq -q 'Config>ApiKey' "/data/config.xml"'';
+      namespace = "prowlarr";
+      workload = "deploy/prowlarr";
+      container = "prowlarr";
+      command = "xq -q 'Config>ApiKey' /data/config.xml";
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
     homelab.cluster.images = [ image ];
