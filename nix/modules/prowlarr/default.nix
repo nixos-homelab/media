@@ -82,6 +82,7 @@ in
             "radarr"
             "flood"
             "sabnzbd"
+            "flaresolverr"
           ];
           ingressPort = 9696;
           dataPath = "/data";

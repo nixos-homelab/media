@@ -46,6 +46,9 @@ For the full list of module options, see [the documentation](https://nixos-homel
   through `homelab-networking`'s `privacy-vpn`.
 - **sabnzbd**: Usenet download client, auto-registered the same way as
   `flood`.
+- **flaresolverr**: solves Cloudflare challenges for Prowlarr, registered as
+  its indexer proxy under the tag `flaresolverr`. Give that tag to the
+  indexers behind Cloudflare.
 
 ## Metrics
 
