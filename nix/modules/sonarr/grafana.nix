@@ -1,4 +1,6 @@
 # Sonarr's panels on the Media dashboard and Home, and its row on the Workload dashboard
+# Its namespace counts toward the `media` area of the Home dashboard, whose CPU, memory and traffic graphs sum the
+# containers by area
 { inputs, ... }:
 { config, lib, ... }:
 let
@@ -25,16 +27,24 @@ in
       && config.homelab.grafana.enable
     '';
   };
-  config = lib.mkIf cfg.grafana.enable {
-    homelab.grafana.home.graphs.library = rows.home;
-    homelab.grafana.overviews.media = {
-      title = "Media";
-      description = "The media stack: what's missing, downloading, streaming, and the apps' health";
-      panels = rows.tiles // rows.panels;
-    };
-    homelab.grafana.drilldown.rows.sonarr = {
-      workload = "sonarr";
-      row = rows.drilldown;
-    };
-  };
+  config = lib.mkMerge [
+    {
+      homelab.grafana.home.areas.media = {
+        color = "#b877d9";
+        namespaces = lib.mkIf config.homelab.sonarr.enable [ "sonarr" ];
+      };
+    }
+    (lib.mkIf cfg.grafana.enable {
+      homelab.grafana.home.graphs.library = rows.home;
+      homelab.grafana.overviews.media = {
+        title = "Media";
+        description = "The media stack: what's missing, downloading, streaming, and the apps' health";
+        panels = rows.tiles // rows.panels;
+      };
+      homelab.grafana.drilldown.rows.sonarr = {
+        workload = "sonarr";
+        row = rows.drilldown;
+      };
+    })
+  ];
 }

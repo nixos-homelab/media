@@ -62,7 +62,6 @@ in
     inputs.homelab-networking.nixosModules.privacy-vpn
   ]
   ++ self.lib.importsApply [
-    ./home-area.nix
     ./logs.nix
     ../integration-logs.nix
     ./integration.nix
