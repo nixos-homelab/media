@@ -80,7 +80,6 @@ in
     inputs.homelab-networking.nixosModules.cilium-crds
   ]
   ++ self.lib.importsApply [
-    ./home-area.nix
     ./logs.nix
     ./grafana.nix
     ./metrics.nix
