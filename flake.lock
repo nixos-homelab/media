@@ -518,6 +518,54 @@
         "type": "github"
       }
     },
+    "homelab-monitoring_3": {
+      "inputs": {
+        "docs": [
+          "homelab-storage",
+          "docs"
+        ],
+        "flake-parts": [
+          "homelab-storage",
+          "flake-parts"
+        ],
+        "homelab-shared": [
+          "homelab-storage",
+          "homelab-shared"
+        ],
+        "homelab-storage": [
+          "homelab-storage"
+        ],
+        "kube-generators": [
+          "homelab-storage",
+          "kube-generators"
+        ],
+        "nixpkgs": [
+          "homelab-storage",
+          "nixpkgs"
+        ],
+        "setup-secrets": [
+          "homelab-storage",
+          "setup-secrets"
+        ],
+        "systems": [
+          "homelab-storage",
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794780325,
+        "narHash": "sha256-qztTtysmUlPmmAS9GEw8Xjfhx/1uCgiRPbcnp7SdZAw=",
+        "owner": "nixos-homelab",
+        "repo": "monitoring",
+        "rev": "21c78098a0a149fbfa14c451a802548944f6e43c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos-homelab",
+        "repo": "monitoring",
+        "type": "github"
+      }
+    },
     "homelab-networking": {
       "inputs": {
         "docs": "docs_2",
@@ -699,6 +747,7 @@
         "flake-parts": [
           "flake-parts"
         ],
+        "homelab-monitoring": "homelab-monitoring_3",
         "homelab-shared": [
           "homelab-shared"
         ],
@@ -716,11 +765,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794742259,
-        "narHash": "sha256-jNNTEadqTtvyh6fnQ4gIMxKzCEAdl7TBal6F6RsPEDU=",
+        "lastModified": 1794783599,
+        "narHash": "sha256-kOdoeb0WS/tcd30Nnnu6NbDcC2nhL7Ymf3gY/tVSG6A=",
         "owner": "nixos-homelab",
         "repo": "storage",
-        "rev": "615183b303cfeba04d249a1c30034a0de68e8f70",
+        "rev": "e083e0cf498c5b03be899b320250a495786d0f33",
         "type": "github"
       },
       "original": {
