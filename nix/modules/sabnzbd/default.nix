@@ -77,6 +77,7 @@ in
       container = "sabnzbd";
       # grep runs in the container (the image has the closure), cut on the host
       command = "${lib.getExe pkgs.gnugrep} '^api_key = ' /data/sabnzbd.ini | cut -d ' ' -f3";
+      same = "stat -c %Y /data/sabnzbd.ini";
     };
     homelab.cluster.backup.volumes.sabnzbd.sabnzbd = [ "/backups" ];
     homelab.cluster.images = [ image ];

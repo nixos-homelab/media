@@ -17,6 +17,7 @@ let
         prowlarr
         cacert
         xq-xml # for extracting the API token
+        coreutils # for its mtime, setup-secrets' same command
       ]
       ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
@@ -70,6 +71,7 @@ in
       workload = "deploy/prowlarr";
       container = "prowlarr";
       command = "xq -q 'Config>ApiKey' /data/config.xml";
+      same = "stat -c %Y /data/config.xml";
     };
     homelab.cluster.backup.volumes.prowlarr.prowlarr = [ "/Backups" ];
     homelab.cluster.images = [ image ];
