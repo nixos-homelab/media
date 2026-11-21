@@ -17,6 +17,7 @@ let
         radarr
         cacert
         xq-xml # for extracting the API token
+        coreutils # for its mtime, setup-secrets' same command
       ]
       ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
@@ -77,6 +78,7 @@ in
       workload = "deploy/radarr";
       container = "radarr";
       command = "xq -q 'Config>ApiKey' /data/config.xml";
+      same = "stat -c %Y /data/config.xml";
     };
     homelab.cluster.backup.volumes.radarr.radarr = [ "/Backups" ];
     homelab.cluster.images = [ image ];

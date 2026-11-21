@@ -18,6 +18,7 @@ let
         plexRaw
         cacert
         xq-xml # for extracting the API token
+        coreutils # for its mtime, setup-secrets' same command
       ]
       ++ lib.optionals cfg.debug ccfg.debugTools;
     config.Env = [
@@ -86,6 +87,7 @@ in
       workload = "deploy/plex";
       container = "plex";
       command = ''xq -x '//Preferences/@PlexOnlineToken' "/Library/Application Support/Plex Media Server/Preferences.xml"'';
+      same = ''stat -c %Y "/Library/Application Support/Plex Media Server/Preferences.xml"'';
     };
     homelab.cluster.backup.volumes.plex.plex = [ "/Application Support/Plex Media Server" ];
     homelab.cluster.images = [ image ];
