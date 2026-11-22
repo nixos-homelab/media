@@ -28,6 +28,7 @@
           {
             lines = [
               "2026-11-18 07:20:11,123::INFO::[downloader:301] Downloader-thread started"
+              "2026-11-22 19:31:04,512::INFO::[rss:612] RSS Feed https://rss.example.org/rss-cart.php?user=me&api=SRVxABCdef123&del=1 was empty"
               "Exception ignored in: <function IOBase.__del__ at 0x7321d311d6c0>"
               "Traceback (most recent call last):"
               ''File "/nix/store/x-python3-3.13.18-env/lib/python3.13/site-packages/cheroot/makefile.py", line 32, in _flush_unlocked''
@@ -39,6 +40,12 @@
                 message = "Downloader-thread started";
                 level = "info";
                 fields.caller = "downloader:301";
+              }
+              # The feed's API key, which the redaction removes
+              {
+                message = "RSS Feed https://rss.example.org/rss-cart.php?user=me&api=(removed)&del=1 was empty";
+                level = "info";
+                fields.caller = "rss:612";
               }
               {
                 message = lib.concatStringsSep "\n" [

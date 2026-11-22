@@ -100,8 +100,16 @@ in
               "/data/sabnzbd.ini"
             ];
             workingDir = "/data";
-            livenessProbe.httpGet.port = "web";
-            readinessProbe.httpGet.port = "web";
+            # The version call needs no API key and answers in a few bytes. The web UI at / is a page larger than the
+            # 10 KiB the kubelet reads: it hung up mid-response, and cheroot logged a traceback for every probe
+            livenessProbe.httpGet = {
+              port = "web";
+              path = "/api?mode=version";
+            };
+            readinessProbe.httpGet = {
+              port = "web";
+              path = "/api?mode=version";
+            };
             volumeMounts = {
               "/usenet".name = "downloads";
               "/tmp".name = "tmp";
