@@ -50,6 +50,10 @@ in
       app = "radarr";
       port = 7878;
     })
+    (import ../arr-alerts.nix { inherit inputs; } {
+      app = "radarr";
+      title = "Radarr";
+    })
   ]
   ++ self.lib.importsApply [
     ./logs.nix

@@ -151,6 +151,24 @@
               deadnix --fail --no-lambda-pattern-names ${self}
               touch $out
             '';
+            # The PromQL of this flake's alert rules through promtool, with Grafana on to have them
+            checks.promql = inputs.homelab-monitoring.lib.alerts.check {
+              inherit pkgs;
+              config =
+                (inputs.nixpkgs.lib.nixosSystem {
+                  modules =
+                    builtins.attrValues inputs.homelab-shared.nixosModules
+                    ++ testModules
+                    ++ [
+                      inputs.homelab-shared.lib.checks.fixture
+                      { nixpkgs.hostPlatform = pkgs.stdenv.hostPlatform.system; }
+                      {
+                        homelab.alloy.enable = true;
+                        homelab.grafana.enable = true;
+                      }
+                    ];
+                }).config;
+            };
             checks.manifests = inputs.homelab-shared.lib.checks.manifests {
               inherit pkgs;
               modules = testModules;
