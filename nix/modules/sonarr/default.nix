@@ -55,6 +55,10 @@ in
       app = "sonarr";
       port = 8989;
     })
+    (import ../arr-alerts.nix { inherit inputs; } {
+      app = "sonarr";
+      title = "Sonarr";
+    })
   ]
   ++ self.lib.importsApply [
     ./logs.nix
