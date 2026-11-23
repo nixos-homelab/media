@@ -34,6 +34,7 @@
       inputs.setup-secrets.follows = "setup-secrets";
       inputs.kube-generators.follows = "kube-generators";
       inputs.homelab-shared.follows = "homelab-shared";
+      inputs.homelab-monitoring.follows = "homelab-monitoring";
       inputs.docs.follows = "docs";
     };
     homelab-networking = {
@@ -43,6 +44,9 @@
       inputs.flake-parts.follows = "flake-parts";
       inputs.setup-secrets.follows = "setup-secrets";
       inputs.kube-generators.follows = "kube-generators";
+      inputs.homelab-shared.follows = "homelab-shared";
+      inputs.homelab-monitoring.follows = "homelab-monitoring";
+      inputs.docs.follows = "docs";
     };
     homelab-monitoring = {
       url = "github:nixos-homelab/monitoring";
